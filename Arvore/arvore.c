@@ -2,14 +2,14 @@
 #include <stdlib.h>
 #include <locale.h>
 
-/* Uma ·rvore bin·ria (= binary tree) È formada de nÛs; 
-   cada nÛ tem um conte˙do (n˙mero,letra, palavra etc) e os
-   endereÁos de duas sub·rvores: uma esquerda e uma direita */
+/* Uma √°rvore bin√°ria √© formada de n√≥s; 
+   cada n√≥ tem um conte√∫do (n√∫mero,letra, palavra etc) e os
+   endere√ßos de duas sub√°rvores: uma esquerda e uma direita */
  
 typedef struct no No;
 struct no {
-   int  item;  // conte˙do do nÛ
-   No *ae, *ad;  // ae - ·rvore esquerda, ad - ·rvore diretia
+   int  item;  // conte√∫do do n√≥
+   No *ae, *ad;  // ae - √°rvore esquerda, ad - √°rvore diretia
 };
 
 No* criaNo() {
@@ -78,25 +78,25 @@ No* geraArvore(No *raiz, int item) {
    return raiz;
 }
 
-/* Quando dizemos um nÛ x devemos entender que x È o endereÁo de um nÛ.
- Nesses termos, o filho esquerdo de um nÛ  x  È  x->ae 
- e o filho direito È  x->ad. Um nÛ x È uma folha se n„o tem filhos,
+/* Quando dizemos um n√≥ x devemos entender que x √© o endere√ßo de um n√≥.
+ Nesses termos, o filho esquerdo de um n√≥  x  √©  x->ae 
+ e o filho direito √©  x->ad. Um n√≥ x √© uma folha se n√£o tem filhos,
  ou seja, se  x->ae e x->ad valem  NULL.*/
 
 int imprimeMenu() {
 	int op;
 	system("cls");
     printf("---------------M E N U-------------");
-    printf("\n\n1- Insere nÛ na ¡rvore");
-    printf("\n2- Exibe em PrÈ-Ordem");
+    printf("\n\n1- Insere n√≥ na √Årvore");
+    printf("\n2- Exibe em Pr√©-Ordem");
     printf("\n3- Exibe em Ordem");
-    printf("\n4- Exibe em PÛs-Ordem");
-    printf("\n5- Quantidade de nÛs na ¡rvore");
-    printf("\n6- Soma do conte˙do de todos nÛs");
+    printf("\n4- Exibe em P√≥s-Ordem");
+    printf("\n5- Quantidade de n√≥s na √Årvore");
+    printf("\n6- Soma do conte√∫do de todos n√≥s");
     printf("\n7- Profundidade");
-    printf("\n8- Exibe o nÛ com o maior valor");
+    printf("\n8- Exibe o n√≥ com o maior valor");
     printf("\n9- SAIR");
-    printf("\n\n Digite a opÁ„o: ");
+    printf("\n\n Digite a op√ß√£o: ");
     scanf("%d",&op);
     return op;
 }
@@ -125,7 +125,7 @@ int main() {
   		op = imprimeMenu();
 	    switch(op) {
 	    	case 1 : system("cls");
-                printf("Digite o valor do nÛ: ");
+                printf("Digite o valor do n√≥: ");
                 scanf("%d",&item);
                 raiz = geraArvore(raiz,item);
                 break;
