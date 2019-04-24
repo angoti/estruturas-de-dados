@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #define TAMANHO 50 
+
 struct fila { 
 	char itens[TAMANHO]; //vetor para armazenar os elementos da fila
-	int posicao;		 //indica o primeiro da fila no vetor  
-	int qtdeElem;		 //indica a quantidade de elementos na fila
+	int posicao;	     //indica o primeiro da fila no vetor  
+	int qtdeElem;	     //indica a quantidade de elementos na fila
 };
 typedef struct fila Fila;
 
