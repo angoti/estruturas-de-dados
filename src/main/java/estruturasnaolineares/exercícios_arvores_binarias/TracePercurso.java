@@ -38,6 +38,8 @@ public class TracePercurso {
     System.out.println(arvore.levelOrder()); // [10, 5, 15, 3, 7, 12, 20]
     System.out.println("altura: " + arvore.altura()); // 2
     System.out.println("tamanho: " + arvore.tamanho()); // 7
+    System.out.println("completa: " + arvore.ehArvoreCompleta()); // true
+    System.out.println("folhas: " + arvore.contarFolhas()); // 4
   }
 
 }
