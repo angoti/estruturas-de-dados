@@ -1,55 +1,176 @@
-
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DFS vs BFS — Estrutura de Dados IFTM</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-.btn{padding:6px 16px;border-radius:6px;border:1px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);font-size:13px;cursor:pointer;transition:background .15s}
-.btn:hover{background:var(--color-background-tertiary)}
-.btn.active{background:#1D9E75;color:#fff;border-color:#1D9E75}
-.panel{background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:8px;padding:10px 14px}
-.label{font-size:11px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:      #0D1117;
+  --surface: #161B22;
+  --border:  #30363D;
+  --text:    #E6EDF3;
+  --muted:   #8B949E;
+  --sans:    'Sora', sans-serif;
+  --mono:    'IBM Plex Mono', monospace;
+  --edge:    #4a5568;
+  --node-fill:    #0a2e22;
+  --node-stroke:  #1D9E75;
+  --node-text:    #5DCAA5;
+  --vis-fill:     #2e1f08;
+  --vis-stroke:   #BA7517;
+  --vis-text:     #EF9F27;
+  --done-fill:    #1e1a3a;
+  --done-stroke:  #534AB7;
+  --done-text:    #AFA9EC;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 20px 60px;
+}
+header { width: 100%; max-width: 820px; margin-bottom: 24px; }
+.badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .08em;
+  background: #0a2e22;
+  color: #1D9E75;
+  border: 1px solid #0F6E56;
+  border-radius: 4px;
+  padding: 3px 8px;
+  margin-bottom: 10px;
+}
+h1 { font-size: clamp(18px,3vw,24px); font-weight: 600; margin-bottom: 4px; }
+.subtitle { font-size: 13px; color: var(--muted); font-family: var(--mono); }
+.card {
+  width: 100%; max-width: 820px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px 24px;
+}
+.tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.btn {
+  padding: 7px 18px; border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg); color: var(--text);
+  font-family: var(--mono); font-size: 12px; cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.btn:hover { background: #21262D; border-color: var(--muted); }
+.btn.active { background: #1D9E75; color: #fff; border-color: #1D9E75; }
+.info-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-bottom: 12px;
+}
+.panel {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.label {
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: .1em; color: var(--muted);
+  text-transform: uppercase; margin-bottom: 5px;
+}
+.mono { font-family: var(--mono); font-size: 13px; color: var(--text); }
+.seq  { font-family: var(--mono); font-size: 13px; color: #1D9E75; min-height: 20px; }
+#bst-svg { display: block; width: 100%; margin-bottom: 12px; }
+.controls { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.explain {
+  font-size: 13px; color: var(--text);
+  line-height: 1.7; min-height: 42px;
+}
+.legend {
+  display: flex; gap: 18px; flex-wrap: wrap;
+  margin-top: 16px; padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--muted);
+}
+.dot {
+  display: inline-block; width: 10px; height: 10px;
+  border-radius: 50%; border: 1.5px solid;
+  vertical-align: middle; margin-right: 4px;
+}
+footer {
+  margin-top: 24px; font-family: var(--mono);
+  font-size: 11px; color: var(--muted); opacity: .5; text-align: center;
+}
 </style>
+</head>
+<body>
 
-<div style="display:flex;gap:8px;margin-bottom:12px">
-  <button class="btn active" onclick="setMode('dfs',this)">DFS — profundidade</button>
-  <button class="btn" onclick="setMode('bfs',this)">BFS — largura</button>
-</div>
+<header>
+  <div class="badge">IFTM · Estrutura de Dados · 2026/1</div>
+  <h1>DFS vs BFS — Percursos em Árvore</h1>
+  <p class="subtitle">Visualização interativa · Semana 7</p>
+</header>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-  <div class="panel">
-    <div class="label">Estrutura usada</div>
-    <div style="font-family:var(--font-mono);font-size:13px" id="estrutura"></div>
+<div class="card">
+  <div class="tabs">
+    <button class="btn active" onclick="setMode('dfs',this)">DFS — profundidade</button>
+    <button class="btn" onclick="setMode('bfs',this)">BFS — largura</button>
   </div>
+
+  <div class="info-grid">
+    <div class="panel">
+      <div class="label">Estrutura usada</div>
+      <div class="mono" id="estrutura"></div>
+    </div>
+    <div class="panel">
+      <div class="label">Ordem de visita</div>
+      <div class="seq" id="ordem">—</div>
+    </div>
+  </div>
+
+  <svg id="bst-svg" viewBox="0 0 780 260">
+    <!-- arestas com cor hardcoded -->
+    <line id="e-10-5"  x1="390" y1="52"  x2="245" y2="132" stroke="#4a5568" stroke-width="2"/>
+    <line id="e-10-15" x1="390" y1="52"  x2="535" y2="132" stroke="#4a5568" stroke-width="2"/>
+    <line id="e-5-3"   x1="245" y1="152" x2="165" y2="212" stroke="#4a5568" stroke-width="2"/>
+    <line id="e-5-7"   x1="245" y1="152" x2="325" y2="212" stroke="#4a5568" stroke-width="2"/>
+    <line id="e-15-12" x1="535" y1="152" x2="455" y2="212" stroke="#4a5568" stroke-width="2"/>
+    <line id="e-15-20" x1="535" y1="152" x2="615" y2="212" stroke="#4a5568" stroke-width="2"/>
+    <!-- nós -->
+    <g id="n10"><circle cx="390" cy="40"  r="28" fill="#0a2e22" stroke="#1D9E75" stroke-width="2"/><text x="390" y="40"  text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="500" fill="#5DCAA5" font-family="'IBM Plex Mono',monospace">10</text></g>
+    <g id="n5" ><circle cx="245" cy="140" r="28" fill="#0a2e22" stroke="#1D9E75" stroke-width="2"/><text x="245" y="140" text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="500" fill="#5DCAA5" font-family="'IBM Plex Mono',monospace">5</text></g>
+    <g id="n15"><circle cx="535" cy="140" r="28" fill="#0a2e22" stroke="#1D9E75" stroke-width="2"/><text x="535" y="140" text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="500" fill="#5DCAA5" font-family="'IBM Plex Mono',monospace">15</text></g>
+    <g id="n3" ><circle cx="165" cy="222" r="28" fill="#0a2e22" stroke="#1D9E75" stroke-width="2"/><text x="165" y="222" text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="500" fill="#5DCAA5" font-family="'IBM Plex Mono',monospace">3</text></g>
+    <g id="n7" ><circle cx="325" cy="222" r="28" fill="#0a2e22" stroke="#1D9E75" stroke-width="2"/><text x="325" y="222" text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="500" fill="#5DCAA5" font-family="'IBM Plex Mono',monospace">7</text></g>
+    <g id="n12"><circle cx="455" cy="222" r="28" fill="#0a2e22" stroke="#1D9E75" stroke-width="2"/><text x="455" y="222" text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="500" fill="#5DCAA5" font-family="'IBM Plex Mono',monospace">12</text></g>
+    <g id="n20"><circle cx="615" cy="222" r="28" fill="#0a2e22" stroke="#1D9E75" stroke-width="2"/><text x="615" y="222" text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="500" fill="#5DCAA5" font-family="'IBM Plex Mono',monospace">20</text></g>
+  </svg>
+
+  <div class="controls">
+    <button class="btn" onclick="prev()">← Anterior</button>
+    <button class="btn" onclick="next()">Próximo →</button>
+    <button class="btn" onclick="reset()" style="color:var(--muted)">↺ Reiniciar</button>
+    <span id="counter" style="font-size:12px;color:var(--muted);margin-left:4px"></span>
+  </div>
+
   <div class="panel">
-    <div class="label">Ordem de visita</div>
-    <div style="font-family:var(--font-mono);font-size:13px;color:#1D9E75" id="ordem">—</div>
+    <div class="label">O que está acontecendo</div>
+    <div class="explain" id="explain">Clique em Próximo para iniciar.</div>
+  </div>
+
+  <div class="legend">
+    <span><span class="dot" style="background:#0a2e22;border-color:#1D9E75"></span>não visitado</span>
+    <span><span class="dot" style="background:#2e1f08;border-color:#BA7517"></span>visitando agora</span>
+    <span><span class="dot" style="background:#1e1a3a;border-color:#534AB7"></span>já visitado</span>
   </div>
 </div>
 
-<svg width="100%" viewBox="0 0 680 240" style="display:block;margin-bottom:10px">
-  <line x1="340" y1="46" x2="210" y2="116" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
-  <line x1="340" y1="46" x2="470" y2="116" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
-  <line x1="210" y1="136" x2="145" y2="196" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
-  <line x1="210" y1="136" x2="275" y2="196" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
-  <line x1="470" y1="136" x2="405" y2="196" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
-  <line x1="470" y1="136" x2="535" y2="196" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
-  <g id="n10"><circle cx="340" cy="36"  r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="340" y="36"  text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">10</text></g>
-  <g id="n5" ><circle cx="210" cy="126" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="210" y="126" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">5</text></g>
-  <g id="n15"><circle cx="470" cy="126" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="470" y="126" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">15</text></g>
-  <g id="n3" ><circle cx="145" cy="206" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="145" y="206" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">3</text></g>
-  <g id="n7" ><circle cx="275" cy="206" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="275" y="206" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">7</text></g>
-  <g id="n12"><circle cx="405" cy="206" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="405" y="206" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">12</text></g>
-  <g id="n20"><circle cx="535" cy="206" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="535" y="206" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">20</text></g>
-</svg>
-
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-  <button class="btn" onclick="prev()">← Anterior</button>
-  <button class="btn" onclick="next()">Próximo →</button>
-  <button class="btn" onclick="reset()">↺ Reiniciar</button>
-  <span id="counter" style="font-size:12px;color:var(--color-text-secondary);margin-left:4px"></span>
-</div>
-
-<div class="panel">
-  <div class="label">O que está acontecendo</div>
-  <div id="explain" style="font-size:13px;color:var(--color-text-primary);line-height:1.6;min-height:40px">Clique em Próximo para iniciar.</div>
-</div>
+<footer>Instituto Federal do Triângulo Mineiro · Sistemas para Internet · Estrutura de Dados 2026/1</footer>
 
 <script>
 const ALL = ['n10','n5','n15','n3','n7','n12','n20'];
@@ -64,7 +185,7 @@ const MODES = {
       { node:'n7',  explain:'Backtrack para 5. Esquerdo (3) visitado → vai para o direito. Desce para 7. Folha → visita 7 e volta.' },
       { node:'n15', explain:'Backtrack até 10. Subárvore esquerda concluída → vai para o direito. Desce para 15.' },
       { node:'n12', explain:'Desce para 12 (filho esquerdo de 15). Folha → visita 12 e faz backtrack.' },
-      { node:'n20', explain:'Backtrack para 15. Esquerdo (12) visitado → vai para o direito. Desce para 20. Folha → visita 20. DFS concluído.' },
+      { node:'n20', explain:'Backtrack para 15. Esquerdo (12) visitado → vai para o direito. Desce para 20. Folha → DFS concluído.' },
     ]
   },
   bfs: {
@@ -82,16 +203,16 @@ const MODES = {
 };
 
 let mode = 'dfs';
-let idx = -1;
+let idx  = -1;
 
-function c(id){ return document.getElementById(id).querySelector('circle'); }
-function t(id){ return document.getElementById(id).querySelector('text'); }
+function circ(id){ return document.getElementById(id).querySelector('circle'); }
+function txt(id) { return document.getElementById(id).querySelector('text');   }
 
 function resetAll(){
-  ALL.forEach(id=>{
-    c(id).setAttribute('fill','#E1F5EE');
-    c(id).setAttribute('stroke','#1D9E75');
-    t(id).setAttribute('fill','#085041');
+  ALL.forEach(id => {
+    circ(id).setAttribute('fill',   '#0a2e22');
+    circ(id).setAttribute('stroke', '#1D9E75');
+    txt(id).setAttribute('fill',    '#5DCAA5');
   });
 }
 
@@ -101,30 +222,24 @@ function applyStep(i){
   if(i < 0){
     document.getElementById('explain').textContent = 'Clique em Próximo para iniciar.';
     document.getElementById('counter').textContent = `Passo 0 de ${m.steps.length}`;
-    document.getElementById('ordem').textContent = '—';
+    document.getElementById('ordem').textContent   = '—';
     return;
   }
-
-  /* visitados ANTES do passo atual — cor roxo */
   for(let j = 0; j < i; j++){
     const id = m.steps[j].node;
-    c(id).setAttribute('fill','#EEEDFE');
-    c(id).setAttribute('stroke','#534AB7');
-    t(id).setAttribute('fill','#3C3489');
+    circ(id).setAttribute('fill',   '#1e1a3a');
+    circ(id).setAttribute('stroke', '#534AB7');
+    txt(id).setAttribute('fill',    '#AFA9EC');
   }
-
-  /* nó ATUAL — cor âmbar */
   const cur = m.steps[i].node;
-  c(cur).setAttribute('fill','#FAEEDA');
-  c(cur).setAttribute('stroke','#BA7517');
-  t(cur).setAttribute('fill','#633806');
-
-  /* todos os outros ficam com a cor padrão (já feito no resetAll) */
+  circ(cur).setAttribute('fill',   '#2e1f08');
+  circ(cur).setAttribute('stroke', '#BA7517');
+  txt(cur).setAttribute('fill',    '#EF9F27');
 
   document.getElementById('explain').textContent = m.steps[i].explain;
   document.getElementById('counter').textContent = `Passo ${i+1} de ${m.steps.length}`;
-
-  const seq = m.steps.slice(0, i+1).map(s => t(s.node).textContent).join(' → ');
+  const seq = m.steps.slice(0, i+1)
+    .map(s => txt(s.node).textContent).join(' → ');
   document.getElementById('ordem').textContent = seq;
 }
 
@@ -143,3 +258,5 @@ function setMode(m, el){
 document.getElementById('estrutura').textContent = MODES['dfs'].estrutura;
 applyStep(-1);
 </script>
+</body>
+</html>
