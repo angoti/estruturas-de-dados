@@ -4,7 +4,6 @@
 .btn:hover{background:var(--color-background-tertiary)}
 .btn.active{background:#1D9E75;color:#fff;border-color:#1D9E75}
 .panel{background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:8px;padding:10px 14px}
-.mono{font-family:var(--font-mono);font-size:13px}
 .label{font-size:11px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
 </style>
 
@@ -16,30 +15,28 @@
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
   <div class="panel">
     <div class="label">Estrutura usada</div>
-    <div class="mono" id="estrutura">Pilha (recursão / stack explícita)</div>
+    <div style="font-family:var(--font-mono);font-size:13px" id="estrutura"></div>
   </div>
   <div class="panel">
     <div class="label">Ordem de visita</div>
-    <div class="mono" id="ordem" style="color:#1D9E75">—</div>
+    <div style="font-family:var(--font-mono);font-size:13px;color:#1D9E75" id="ordem">—</div>
   </div>
 </div>
 
 <svg width="100%" viewBox="0 0 680 240" style="display:block;margin-bottom:10px">
-  <!-- arestas -->
   <line x1="340" y1="46" x2="210" y2="116" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
   <line x1="340" y1="46" x2="470" y2="116" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
   <line x1="210" y1="136" x2="145" y2="196" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
   <line x1="210" y1="136" x2="275" y2="196" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
   <line x1="470" y1="136" x2="405" y2="196" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
   <line x1="470" y1="136" x2="535" y2="196" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
-  <!-- nós com números de visita -->
-  <g id="n10"><circle cx="340" cy="36"  r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text id="t10" x="340" y="36"  text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">10</text></g>
-  <g id="n5" ><circle cx="210" cy="126" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text id="t5"  x="210" y="126" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">5</text></g>
-  <g id="n15"><circle cx="470" cy="126" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text id="t15" x="470" y="126" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">15</text></g>
-  <g id="n3" ><circle cx="145" cy="206" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text id="t3"  x="145" y="206" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">3</text></g>
-  <g id="n7" ><circle cx="275" cy="206" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text id="t7"  x="275" y="206" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">7</text></g>
-  <g id="n12"><circle cx="405" cy="206" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text id="t12" x="405" y="206" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">12</text></g>
-  <g id="n20"><circle cx="535" cy="206" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text id="t20" x="535" y="206" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">20</text></g>
+  <g id="n10"><circle cx="340" cy="36"  r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="340" y="36"  text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">10</text></g>
+  <g id="n5" ><circle cx="210" cy="126" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="210" y="126" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">5</text></g>
+  <g id="n15"><circle cx="470" cy="126" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="470" y="126" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">15</text></g>
+  <g id="n3" ><circle cx="145" cy="206" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="145" y="206" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">3</text></g>
+  <g id="n7" ><circle cx="275" cy="206" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="275" y="206" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">7</text></g>
+  <g id="n12"><circle cx="405" cy="206" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="405" y="206" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">12</text></g>
+  <g id="n20"><circle cx="535" cy="206" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="535" y="206" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">20</text></g>
 </svg>
 
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
@@ -55,27 +52,25 @@
 </div>
 
 <script>
-const nodes = ['n10','n5','n15','n3','n7','n12','n20'];
+const ALL = ['n10','n5','n15','n3','n7','n12','n20'];
 
-const modes = {
+const MODES = {
   dfs: {
     estrutura: 'Pilha — recursão (call stack da JVM)',
-    ordem: '10 → 5 → 3 → 7 → 15 → 12 → 20',
     steps: [
       { node:'n10', explain:'Começa na raiz (10). DFS mergulha imediatamente para o filho esquerdo — não visita o direito ainda.' },
       { node:'n5',  explain:'Desce para 5 (filho esquerdo de 10). Continua mergulhando para a esquerda.' },
-      { node:'n3',  explain:'Desce para 3 (filho esquerdo de 5). É uma folha — sem filhos. Visita 3 e começa a voltar (backtrack).' },
-      { node:'n7',  explain:'Backtrack para 5. Filho esquerdo (3) já visitado → explora o direito. Desce para 7. Folha → visita 7 e volta.' },
-      { node:'n15', explain:'Backtrack até 10. Subárvore esquerda concluída → explora o direito. Desce para 15.' },
-      { node:'n12', explain:'Desce para 12 (filho esquerdo de 15). Folha → visita 12 e volta.' },
-      { node:'n20', explain:'Backtrack para 15. Filho esquerdo visitado → explora o direito. Desce para 20. Folha → visita 20. DFS concluído.' },
+      { node:'n3',  explain:'Desce para 3 (filho esquerdo de 5). Folha — sem filhos. Visita 3 e faz backtrack.' },
+      { node:'n7',  explain:'Backtrack para 5. Esquerdo (3) visitado → vai para o direito. Desce para 7. Folha → visita 7 e volta.' },
+      { node:'n15', explain:'Backtrack até 10. Subárvore esquerda concluída → vai para o direito. Desce para 15.' },
+      { node:'n12', explain:'Desce para 12 (filho esquerdo de 15). Folha → visita 12 e faz backtrack.' },
+      { node:'n20', explain:'Backtrack para 15. Esquerdo (12) visitado → vai para o direito. Desce para 20. Folha → visita 20. DFS concluído.' },
     ]
   },
   bfs: {
     estrutura: 'Fila (Queue) — explícita, sem recursão',
-    ordem: '10 → 5 → 15 → 3 → 7 → 12 → 20',
     steps: [
-      { node:'n10', explain:'Começa na raiz (10). BFS não mergulha — enfileira os filhos e visita nível por nível. Fila: [5, 15].' },
+      { node:'n10', explain:'Remove 10 da fila, visita. Enfileira filhos esq e dir. Fila: [5, 15].' },
       { node:'n5',  explain:'Remove 5 da fila, visita. Enfileira seus filhos. Fila: [15, 3, 7].' },
       { node:'n15', explain:'Remove 15 da fila, visita. Enfileira seus filhos. Fila: [3, 7, 12, 20].' },
       { node:'n3',  explain:'Remove 3 da fila, visita. Folha — sem filhos. Fila: [7, 12, 20].' },
@@ -88,60 +83,63 @@ const modes = {
 
 let mode = 'dfs';
 let idx = -1;
-let timer = null;
 
-function circle(id){ return document.getElementById(id).querySelector('circle'); }
-function label(id) { return document.getElementById(id).querySelector('text'); }
+function c(id){ return document.getElementById(id).querySelector('circle'); }
+function t(id){ return document.getElementById(id).querySelector('text'); }
 
-function resetColors(){
-  nodes.forEach(id=>{
-    circle(id).setAttribute('fill','#E1F5EE');
-    circle(id).setAttribute('stroke','#1D9E75');
-    label(id).setAttribute('fill','#085041');
+function resetAll(){
+  ALL.forEach(id=>{
+    c(id).setAttribute('fill','#E1F5EE');
+    c(id).setAttribute('stroke','#1D9E75');
+    t(id).setAttribute('fill','#085041');
   });
 }
 
 function applyStep(i){
-  resetColors();
-  const m = modes[mode];
+  resetAll();
+  const m = MODES[mode];
   if(i < 0){
     document.getElementById('explain').textContent = 'Clique em Próximo para iniciar.';
     document.getElementById('counter').textContent = `Passo 0 de ${m.steps.length}`;
     document.getElementById('ordem').textContent = '—';
     return;
   }
-  const visited = m.steps.slice(0, i).map(s=>s.node);
-  visited.forEach(id=>{
-    circle(id).setAttribute('fill','#EEEDFE');
-    circle(id).setAttribute('stroke','#534AB7');
-    label(id).setAttribute('fill','#3C3489');
-  });
+
+  /* visitados ANTES do passo atual — cor roxo */
+  for(let j = 0; j < i; j++){
+    const id = m.steps[j].node;
+    c(id).setAttribute('fill','#EEEDFE');
+    c(id).setAttribute('stroke','#534AB7');
+    t(id).setAttribute('fill','#3C3489');
+  }
+
+  /* nó ATUAL — cor âmbar */
   const cur = m.steps[i].node;
-  circle(cur).setAttribute('fill','#FAEEDA');
-  circle(cur).setAttribute('stroke','#BA7517');
-  label(cur).setAttribute('fill','#633806');
+  c(cur).setAttribute('fill','#FAEEDA');
+  c(cur).setAttribute('stroke','#BA7517');
+  t(cur).setAttribute('fill','#633806');
+
+  /* todos os outros ficam com a cor padrão (já feito no resetAll) */
 
   document.getElementById('explain').textContent = m.steps[i].explain;
   document.getElementById('counter').textContent = `Passo ${i+1} de ${m.steps.length}`;
-  const seq = m.steps.slice(0,i+1).map(s=>{
-    const v = document.getElementById(s.node).querySelector('text').textContent;
-    return v;
-  });
-  document.getElementById('ordem').textContent = seq.join(' → ');
+
+  const seq = m.steps.slice(0, i+1).map(s => t(s.node).textContent).join(' → ');
+  document.getElementById('ordem').textContent = seq;
 }
 
-function next(){ if(idx < modes[mode].steps.length-1){ idx++; applyStep(idx); } }
+function next(){ if(idx < MODES[mode].steps.length - 1){ idx++; applyStep(idx); } }
 function prev(){ if(idx > -1){ idx--; applyStep(idx); } }
-function reset(){ if(timer)clearTimeout(timer); idx=-1; applyStep(-1); }
+function reset(){ idx = -1; applyStep(-1); }
 
 function setMode(m, el){
-  mode=m; idx=-1;
-  document.querySelectorAll('.btn').forEach(b=>b.classList.remove('active'));
+  mode = m; idx = -1;
+  document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('estrutura').textContent = modes[m].estrutura;
+  document.getElementById('estrutura').textContent = MODES[m].estrutura;
   applyStep(-1);
 }
 
-document.getElementById('estrutura').textContent = modes['dfs'].estrutura;
+document.getElementById('estrutura').textContent = MODES['dfs'].estrutura;
 applyStep(-1);
 </script>
