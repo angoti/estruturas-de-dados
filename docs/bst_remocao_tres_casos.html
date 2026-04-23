@@ -1,73 +1,108 @@
-
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BST — Os Três Casos de Remoção</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-.btn{padding:5px 12px;border-radius:6px;border:1px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);font-size:12px;cursor:pointer;transition:background .15s}
-.btn:hover{background:var(--color-background-tertiary)}
-.btn.active{background:#1D9E75;color:#fff;border-color:#1D9E75}
-.panel{background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:8px;padding:8px 12px}
-.label{font-size:10px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0D1117;color:#E6EDF3;font-family:'Sora',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 20px 40px}
+.wrap{width:100%;max-width:820px}
+header{margin-bottom:18px}
+.badge{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;background:#0a2e22;color:#1D9E75;border:1px solid #0F6E56;border-radius:4px;padding:3px 8px;margin-bottom:8px}
+h1{font-size:20px;font-weight:600;margin-bottom:3px}
+.sub{font-size:12px;color:#8B949E;font-family:'IBM Plex Mono',monospace}
+.card{background:#161B22;border:1px solid #30363D;border-radius:12px;padding:18px 20px}
+
+/* tabs */
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:6px;border:1px solid #30363D;background:#0D1117;color:#E6EDF3;font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;transition:background .15s,border-color .15s}
+.tab:hover{background:#21262D;border-color:#8B949E}
+.tab.active{background:#1D9E75;color:#fff;border-color:#1D9E75}
+
+/* árvore */
+#svg-bst{display:block;width:100%;margin-bottom:10px}
+
+/* controles */
+.ctrl{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.ctrl .tab{font-size:12px}
+#counter{font-size:11px;color:#8B949E;margin-left:4px}
+
+/* painéis inferiores */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.panel{background:#0D1117;border:1px solid #30363D;border-radius:8px;padding:10px 14px}
+.lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;color:#8B949E;text-transform:uppercase;margin-bottom:5px}
+.val{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#E6EDF3;min-height:16px}
+.val.green{color:#1D9E75}
+.explain-text{font-size:13px;color:#E6EDF3;line-height:1.65;min-height:40px}
 </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="badge">IFTM · Estrutura de Dados · 2026/1</div>
+    <h1>BST — Os Três Casos de Remoção</h1>
+    <p class="sub">Visualização interativa · Semana 8</p>
+  </header>
 
-<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-  <button class="btn active" onclick="setCase(0,this)">Caso 1 — Folha</button>
-  <button class="btn" onclick="setCase(1,this)">Caso 2 — Um filho</button>
-  <button class="btn" onclick="setCase(2,this)">Caso 3 — Dois filhos</button>
-</div>
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="setCase(0,this)">Caso 1 — Folha</button>
+      <button class="tab" onclick="setCase(1,this)">Caso 2 — Um filho</button>
+      <button class="tab" onclick="setCase(2,this)">Caso 3 — Dois filhos</button>
+    </div>
 
-<!-- árvore compacta: 3 níveis em 170px de altura -->
-<svg id="svg-bst" width="100%" viewBox="0 0 680 175" style="display:block;margin-bottom:6px">
-  <defs>
-    <marker id="arm" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </marker>
-  </defs>
-  <g id="g-edges"></g>
-  <g id="g-nodes"></g>
-</svg>
+    <svg id="svg-bst" viewBox="0 0 680 175">
+      <defs>
+        <marker id="arm" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+      <g id="g-edges"></g>
+      <g id="g-nodes"></g>
+    </svg>
 
-<!-- controles -->
-<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap">
-  <button class="btn" onclick="prev()">← Anterior</button>
-  <button class="btn" onclick="next()">Próximo →</button>
-  <button class="btn" onclick="reset()">↺ Reiniciar</button>
-  <span id="counter" style="font-size:11px;color:var(--color-text-secondary)"></span>
-</div>
+    <div class="ctrl">
+      <button class="tab" onclick="prev()">← Anterior</button>
+      <button class="tab" onclick="next()">Próximo →</button>
+      <button class="tab" onclick="reset()" style="color:#8B949E">↺ Reiniciar</button>
+      <span id="counter">Passo 0 de 0</span>
+    </div>
 
-<!-- info em duas colunas -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
-  <div class="panel">
-    <div class="label">Ação</div>
-    <div style="font-family:var(--font-mono);font-size:11px;min-height:16px;color:var(--color-text-primary)" id="acao">—</div>
+    <div class="info-grid">
+      <div class="panel">
+        <div class="lbl">Ação</div>
+        <div class="val" id="acao">—</div>
+      </div>
+      <div class="panel">
+        <div class="lbl">In-order após remoção</div>
+        <div class="val green" id="inorder">—</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="lbl">Explicação</div>
+      <div class="explain-text" id="explain">Clique em Próximo para iniciar.</div>
+    </div>
   </div>
-  <div class="panel">
-    <div class="label">In-order após remoção</div>
-    <div style="font-family:var(--font-mono);font-size:11px;color:#1D9E75;min-height:16px" id="inorder">—</div>
-  </div>
-</div>
-<div class="panel">
-  <div class="label">Explicação</div>
-  <div id="explain" style="font-size:12px;color:var(--color-text-primary);line-height:1.55;min-height:36px">Clique em Próximo para iniciar.</div>
 </div>
 
 <script>
 const NS='http://www.w3.org/2000/svg';
 const C={
-  normal: {f:'#E1F5EE',s:'#1D9E75',t:'#085041'},
-  cur:    {f:'#FAEEDA',s:'#BA7517',t:'#633806'},
-  vis:    {f:'#EEEDFE',s:'#534AB7',t:'#3C3489'},
-  del:    {f:'#FCEBEB',s:'#A32D2D',t:'#791F1F'},
-  succ:   {f:'#EAF3DE',s:'#3B6D11',t:'#27500A'},
+  normal:{f:'#0a2e22',s:'#1D9E75',t:'#5DCAA5'},
+  cur:   {f:'#2e1f08',s:'#BA7517',t:'#EF9F27'},
+  vis:   {f:'#1e1a3a',s:'#534AB7',t:'#AFA9EC'},
+  del:   {f:'#2e0a0a',s:'#A32D2D',t:'#F09595'},
+  succ:  {f:'#1a2e0a',s:'#3B6D11',t:'#97C459'},
 };
-const EC='#9ca3af', ED='#A32D2D', EN='#1D9E75';
+const EC='#4a5568', ED='#A32D2D', EN='#1D9E75';
 
-/* coordenadas compactas
-   nível 0: y=26   r=19
-   nível 1: y=86   r=19
-   nível 2: y=146  r=17
-*/
-const Y0=26, Y1=86, Y2=146, R0=19, R1=19, R2=17;
+const Y0=26,Y1=90,Y2=152,R0=20,R1=19,R2=17;
 const POS={
   n10:{cx:340,cy:Y0,r:R0}, n5:{cx:190,cy:Y1,r:R1}, n15:{cx:490,cy:Y1,r:R1},
-  n3:{cx:110,cy:Y2,r:R2}, n7:{cx:270,cy:Y2,r:R2},
+  n3:{cx:110,cy:Y2,r:R2},  n7:{cx:270,cy:Y2,r:R2},
   n12:{cx:410,cy:Y2,r:R2}, n20:{cx:570,cy:Y2,r:R2},
 };
 
@@ -76,200 +111,153 @@ function svgEl(tag,attrs){
   for(const[k,v]of Object.entries(attrs))e.setAttribute(k,v);
   return e;
 }
-
-function edge(g,a,b,color=EC,dashed=false){
-  const pa=POS[a]||a, pb=POS[b]||b;
-  const dx=pb.cx-pa.cx, dy=pb.cy-pa.cy, d=Math.sqrt(dx*dx+dy*dy);
-  const sx=dx/d, sy=dy/d;
-  const ra=pa.r||19, rb=pb.r||17;
+function edgeXY(g,p1,p2,color=EC,dashed=false){
+  const dx=p2.cx-p1.cx,dy=p2.cy-p1.cy,d=Math.sqrt(dx*dx+dy*dy);
+  if(d===0)return;
+  const sx=dx/d,sy=dy/d;
   const l=svgEl('line',{
-    x1:pa.cx+sx*ra, y1:pa.cy+sy*ra,
-    x2:pb.cx-sx*rb, y2:pb.cy-sy*rb,
-    stroke:color,'stroke-width':'1.6'
+    x1:p1.cx+sx*p1.r,y1:p1.cy+sy*p1.r,
+    x2:p2.cx-sx*p2.r,y2:p2.cy-sy*p2.r,
+    stroke:color,'stroke-width':'1.8'
   });
-  if(dashed) l.setAttribute('stroke-dasharray','5 3');
+  if(dashed)l.setAttribute('stroke-dasharray','5 3');
   g.appendChild(l);
 }
-
-function node(g,id,val,color,r){
-  const p=POS[id]; if(!p) return;
-  const cr=r||p.r;
-  const c=svgEl('circle',{cx:p.cx,cy:p.cy,r:cr,fill:color.f,stroke:color.s,'stroke-width':'1.8'});
-  const t=svgEl('text',{x:p.cx,y:p.cy,'text-anchor':'middle','dominant-baseline':'central',
-    'font-size':cr>=18?'13':'11','font-weight':'500',fill:color.t,
-    'font-family':"'IBM Plex Mono',monospace"});
-  t.textContent=val; g.appendChild(c); g.appendChild(t);
+function edge(g,a,b,color=EC,dashed=false){
+  edgeXY(g,POS[a],POS[b],color,dashed);
 }
-
-/* nó em posição arbitrária (para estados após remoção) */
-function nodeXY(g,cx,cy,val,color,r=17){
-  const c=svgEl('circle',{cx,cy,r,fill:color.f,stroke:color.s,'stroke-width':'1.8'});
+function nodeAt(g,cx,cy,r,val,color){
+  const c=svgEl('circle',{cx,cy,r,fill:color.f,stroke:color.s,'stroke-width':'2'});
   const t=svgEl('text',{x:cx,y:cy,'text-anchor':'middle','dominant-baseline':'central',
-    'font-size':'12','font-weight':'500',fill:color.t,
+    'font-size':r>=18?'13':'12','font-weight':'500',fill:color.t,
     'font-family':"'IBM Plex Mono',monospace"});
-  t.textContent=val; g.appendChild(c); g.appendChild(t);
+  t.textContent=val;
+  g.appendChild(c);g.appendChild(t);
+}
+function node(g,id,val,color){
+  const p=POS[id];
+  nodeAt(g,p.cx,p.cy,p.r,val,color);
 }
 
 const CASES=[
-
   /* CASO 1 — folha */
   {steps:[
-    { acao:'Identificar nó alvo: 3',
-      inorder:'3  5  7  10  12  15  20',
-      explain:'Árvore inicial. Vamos remover o nó 3, que é folha (sem filhos). Ele é filho esquerdo do nó 5.',
-      draw(gE,gN){
-        edge(gE,'n10','n5'); edge(gE,'n10','n15');
-        edge(gE,'n5','n3'); edge(gE,'n5','n7');
-        edge(gE,'n15','n12'); edge(gE,'n15','n20');
-        node(gN,'n10',10,C.normal); node(gN,'n5',5,C.normal); node(gN,'n15',15,C.normal);
-        node(gN,'n3',3,C.normal); node(gN,'n7',7,C.normal);
-        node(gN,'n12',12,C.normal); node(gN,'n20',20,C.normal);
-      }},
-    { acao:'nó 3 é folha → pai(5).esquerdo = null',
-      inorder:'3  5  7  10  12  15  20',
-      explain:'Nó 3 identificado (âmbar). É folha — esq=null, dir=null. Basta atualizar pai(5).esquerdo = null. Nenhum filho para reposicionar.',
-      draw(gE,gN){
-        edge(gE,'n10','n5'); edge(gE,'n10','n15');
-        edge(gE,'n5','n3',ED,true); edge(gE,'n5','n7');
-        edge(gE,'n15','n12'); edge(gE,'n15','n20');
-        node(gN,'n10',10,C.normal); node(gN,'n5',5,C.vis); node(gN,'n15',15,C.normal);
-        node(gN,'n3',3,C.cur); node(gN,'n7',7,C.normal);
-        node(gN,'n12',12,C.normal); node(gN,'n20',20,C.normal);
-      }},
-    { acao:'Remoção concluída ✓',
-      inorder:'5  7  10  12  15  20',
-      explain:'Nó 3 removido. Pai(5) aponta para null à esquerda. BST válida — in-order: [5, 7, 10, 12, 15, 20].',
-      draw(gE,gN){
-        edge(gE,'n10','n5'); edge(gE,'n10','n15');
-        edge(gE,'n5','n7'); edge(gE,'n15','n12'); edge(gE,'n15','n20');
-        node(gN,'n10',10,C.normal); node(gN,'n5',5,C.succ); node(gN,'n15',15,C.normal);
-        node(gN,'n7',7,C.normal); node(gN,'n12',12,C.normal); node(gN,'n20',20,C.normal);
-      }},
+    {acao:'Identificar nó alvo: 3',inorder:'3  5  7  10  12  15  20',
+     explain:'Árvore inicial. Queremos remover o nó 3, que é folha (sem filhos). Ele é filho esquerdo do nó 5.',
+     draw(gE,gN){
+       edge(gE,'n10','n5');edge(gE,'n10','n15');
+       edge(gE,'n5','n3');edge(gE,'n5','n7');
+       edge(gE,'n15','n12');edge(gE,'n15','n20');
+       node(gN,'n10',10,C.normal);node(gN,'n5',5,C.normal);node(gN,'n15',15,C.normal);
+       node(gN,'n3',3,C.normal);node(gN,'n7',7,C.normal);
+       node(gN,'n12',12,C.normal);node(gN,'n20',20,C.normal);
+     }},
+    {acao:'nó 3 é folha → pai(5).esquerdo = null',inorder:'3  5  7  10  12  15  20',
+     explain:'Nó 3 identificado (âmbar). É folha — esq=null, dir=null. Basta atualizar pai(5).esquerdo = null.',
+     draw(gE,gN){
+       edge(gE,'n10','n5');edge(gE,'n10','n15');
+       edge(gE,'n5','n3',ED,true);edge(gE,'n5','n7');
+       edge(gE,'n15','n12');edge(gE,'n15','n20');
+       node(gN,'n10',10,C.normal);node(gN,'n5',5,C.vis);node(gN,'n15',15,C.normal);
+       node(gN,'n3',3,C.cur);node(gN,'n7',7,C.normal);
+       node(gN,'n12',12,C.normal);node(gN,'n20',20,C.normal);
+     }},
+    {acao:'Remoção concluída ✓',inorder:'5  7  10  12  15  20',
+     explain:'Nó 3 removido. Pai(5) agora tem esquerdo=null. BST válida — in-order: [5, 7, 10, 12, 15, 20].',
+     draw(gE,gN){
+       edge(gE,'n10','n5');edge(gE,'n10','n15');
+       edge(gE,'n5','n7');edge(gE,'n15','n12');edge(gE,'n15','n20');
+       node(gN,'n10',10,C.normal);node(gN,'n5',5,C.succ);node(gN,'n15',15,C.normal);
+       node(gN,'n7',7,C.normal);node(gN,'n12',12,C.normal);node(gN,'n20',20,C.normal);
+     }},
   ]},
-
   /* CASO 2 — um filho */
   {steps:[
-    { acao:'Identificar nó alvo: 15 (só filho esq)',
-      inorder:'3  5  7  10  12  15',
-      explain:'Árvore onde 15 tem apenas filho esquerdo (12). Vamos remover 15.',
-      draw(gE,gN){
-        edge(gE,'n10','n5'); edge(gE,'n10','n15');
-        edge(gE,'n5','n3'); edge(gE,'n5','n7');
-        edge(gE,'n15','n12');
-        node(gN,'n10',10,C.normal); node(gN,'n5',5,C.normal); node(gN,'n15',15,C.normal);
-        node(gN,'n3',3,C.normal); node(gN,'n7',7,C.normal); node(gN,'n12',12,C.normal);
-      }},
-    { acao:'15 tem só filho esq → pai(10).dir = 12',
-      inorder:'3  5  7  10  12  15',
-      explain:'Nó 15 tem apenas filho esquerdo (12). O pai(10).direito passa a apontar diretamente para 12 — 15 é bypassado.',
-      draw(gE,gN){
-        edge(gE,'n10','n5');
-        edge(gE,'n10','n15',ED,true);
-        /* nova aresta: de n10 para n12 */
-        const p10=POS['n10'], p12=POS['n12'];
-        const dx=p12.cx-p10.cx,dy=p12.cy-p10.cy,d=Math.sqrt(dx*dx+dy*dy);
-        const sx=dx/d,sy=dy/d;
-        const l=document.createElementNS(NS,'line');
-        l.setAttribute('x1',p10.cx+sx*R0); l.setAttribute('y1',p10.cy+sy*R0);
-        l.setAttribute('x2',p12.cx-sx*R2); l.setAttribute('y2',p12.cy-sy*R2);
-        l.setAttribute('stroke',EN); l.setAttribute('stroke-width','1.6');
-        gE.appendChild(l);
-        edge(gE,'n5','n3'); edge(gE,'n5','n7');
-        node(gN,'n10',10,C.vis); node(gN,'n5',5,C.normal); node(gN,'n15',15,C.del);
-        node(gN,'n3',3,C.normal); node(gN,'n7',7,C.normal); node(gN,'n12',12,C.succ);
-      }},
-    { acao:'Remoção concluída ✓',
-      inorder:'3  5  7  10  12',
-      explain:'Nó 15 removido. Filho 12 subiu para o lugar. BST válida — in-order: [3, 5, 7, 10, 12].',
-      draw(gE,gN){
-        /* n12 sobe para Y1 à direita de n10 */
-        const cx12=490, cy12=Y1;
-        const p10=POS['n10'];
-        const dx=cx12-p10.cx,dy=cy12-p10.cy,d=Math.sqrt(dx*dx+dy*dy);
-        const sx=dx/d,sy=dy/d;
-        const l=document.createElementNS(NS,'line');
-        l.setAttribute('x1',p10.cx+sx*R0); l.setAttribute('y1',p10.cy+sy*R0);
-        l.setAttribute('x2',cx12-sx*R1);   l.setAttribute('y2',cy12-sy*R1);
-        l.setAttribute('stroke',EC); l.setAttribute('stroke-width','1.6');
-        gE.appendChild(l);
-        edge(gE,'n10','n5'); edge(gE,'n5','n3'); edge(gE,'n5','n7');
-        node(gN,'n10',10,C.succ); node(gN,'n5',5,C.normal);
-        node(gN,'n3',3,C.normal); node(gN,'n7',7,C.normal);
-        nodeXY(gN,cx12,cy12,12,C.succ,R1);
-      }},
+    {acao:'Identificar nó alvo: 15 (só filho esq = 12)',inorder:'3  5  7  10  12  15',
+     explain:'Árvore onde 15 tem apenas filho esquerdo (12). Vamos remover 15.',
+     draw(gE,gN){
+       edge(gE,'n10','n5');edge(gE,'n10','n15');
+       edge(gE,'n5','n3');edge(gE,'n5','n7');edge(gE,'n15','n12');
+       node(gN,'n10',10,C.normal);node(gN,'n5',5,C.normal);node(gN,'n15',15,C.normal);
+       node(gN,'n3',3,C.normal);node(gN,'n7',7,C.normal);node(gN,'n12',12,C.normal);
+     }},
+    {acao:'15 tem só filho esq → pai(10).dir = 12',inorder:'3  5  7  10  12  15',
+     explain:'Nó 15 tem apenas filho esquerdo (12). O pai(10).direito passa a apontar diretamente para 12 — 15 é descartado.',
+     draw(gE,gN){
+       edge(gE,'n10','n5');
+       edge(gE,'n10','n15',ED,true);
+       edgeXY(gE,POS['n10'],POS['n12'],EN);
+       edge(gE,'n5','n3');edge(gE,'n5','n7');
+       node(gN,'n10',10,C.vis);node(gN,'n5',5,C.normal);node(gN,'n15',15,C.del);
+       node(gN,'n3',3,C.normal);node(gN,'n7',7,C.normal);node(gN,'n12',12,C.succ);
+     }},
+    {acao:'Remoção concluída ✓',inorder:'3  5  7  10  12',
+     explain:'Nó 15 removido. O filho 12 subiu para o lugar. BST válida — in-order: [3, 5, 7, 10, 12].',
+     draw(gE,gN){
+       const p2={cx:490,cy:Y1,r:R1};
+       edgeXY(gE,POS['n10'],p2,EC);
+       edge(gE,'n10','n5');edge(gE,'n5','n3');edge(gE,'n5','n7');
+       node(gN,'n10',10,C.succ);node(gN,'n5',5,C.normal);
+       node(gN,'n3',3,C.normal);node(gN,'n7',7,C.normal);
+       nodeAt(gN,490,Y1,R1,12,C.succ);
+     }},
   ]},
-
   /* CASO 3 — dois filhos */
   {steps:[
-    { acao:'Identificar nó alvo: 10 (dois filhos)',
-      inorder:'3  5  7  10  12  15  20',
-      explain:'Removemos a raiz (10), que tem dois filhos. Estratégia: substituir pelo SUCESSOR IN-ORDER = menor da subárvore direita.',
-      draw(gE,gN){
-        edge(gE,'n10','n5'); edge(gE,'n10','n15');
-        edge(gE,'n5','n3'); edge(gE,'n5','n7');
-        edge(gE,'n15','n12'); edge(gE,'n15','n20');
-        node(gN,'n10',10,C.normal); node(gN,'n5',5,C.normal); node(gN,'n15',15,C.normal);
-        node(gN,'n3',3,C.normal); node(gN,'n7',7,C.normal);
-        node(gN,'n12',12,C.normal); node(gN,'n20',20,C.normal);
-      }},
-    { acao:'Sucessor in-order = mínimo da subárvore dir = 12',
-      inorder:'3  5  7  10  12  15  20',
-      explain:'Desce pela esquerda de {15,12,20}: o mais à esquerda é 12. Ele é o menor valor maior que 10 — o sucessor in-order.',
-      draw(gE,gN){
-        edge(gE,'n10','n5'); edge(gE,'n10','n15');
-        edge(gE,'n5','n3'); edge(gE,'n5','n7');
-        edge(gE,'n15','n12'); edge(gE,'n15','n20');
-        node(gN,'n10',10,C.del); node(gN,'n5',5,C.normal); node(gN,'n15',15,C.vis);
-        node(gN,'n3',3,C.normal); node(gN,'n7',7,C.normal);
-        node(gN,'n12',12,C.succ); node(gN,'n20',20,C.normal);
-      }},
-    { acao:'Copia dado do sucessor → raiz vira 12',
-      inorder:'3  5  7  10  12  15  20',
-      explain:'Copiamos o valor 12 para a raiz. Agora 12 aparece duas vezes. Próximo: remover o 12 original da subárvore direita (Caso 1 — folha).',
-      draw(gE,gN){
-        edge(gE,'n10','n5'); edge(gE,'n10','n15');
-        edge(gE,'n5','n3'); edge(gE,'n5','n7');
-        edge(gE,'n15','n12'); edge(gE,'n15','n20');
-        node(gN,'n10',12,C.cur); node(gN,'n5',5,C.normal); node(gN,'n15',15,C.vis);
-        node(gN,'n3',3,C.normal); node(gN,'n7',7,C.normal);
-        node(gN,'n12',12,C.del); node(gN,'n20',20,C.normal);
-      }},
-    { acao:'Remove sucessor (folha) → Remoção concluída ✓',
-      inorder:'3  5  7  12  15  20',
-      explain:'Sucessor 12 era folha → Caso 1. pai(15).esquerdo = null. BST válida — in-order: [3, 5, 7, 12, 15, 20].',
-      draw(gE,gN){
-        edge(gE,'n10','n5'); edge(gE,'n10','n15');
-        edge(gE,'n5','n3'); edge(gE,'n5','n7');
-        edge(gE,'n15','n20');
-        node(gN,'n10',12,C.succ); node(gN,'n5',5,C.normal); node(gN,'n15',15,C.succ);
-        node(gN,'n3',3,C.normal); node(gN,'n7',7,C.normal); node(gN,'n20',20,C.normal);
-      }},
+    {acao:'Identificar nó alvo: 10 (dois filhos)',inorder:'3  5  7  10  12  15  20',
+     explain:'Removemos a raiz (10), que tem dois filhos. Estratégia: substituir pelo SUCESSOR IN-ORDER = menor da subárvore direita.',
+     draw(gE,gN){
+       edge(gE,'n10','n5');edge(gE,'n10','n15');
+       edge(gE,'n5','n3');edge(gE,'n5','n7');
+       edge(gE,'n15','n12');edge(gE,'n15','n20');
+       node(gN,'n10',10,C.normal);node(gN,'n5',5,C.normal);node(gN,'n15',15,C.normal);
+       node(gN,'n3',3,C.normal);node(gN,'n7',7,C.normal);
+       node(gN,'n12',12,C.normal);node(gN,'n20',20,C.normal);
+     }},
+    {acao:'Sucessor in-order = mínimo da subárvore dir = 12',inorder:'3  5  7  10  12  15  20',
+     explain:'Desce pela esquerda de {15,12,20}: o mais à esquerda é 12. Menor valor maior que 10 — o sucessor in-order.',
+     draw(gE,gN){
+       edge(gE,'n10','n5');edge(gE,'n10','n15');
+       edge(gE,'n5','n3');edge(gE,'n5','n7');
+       edge(gE,'n15','n12');edge(gE,'n15','n20');
+       node(gN,'n10',10,C.del);node(gN,'n5',5,C.normal);node(gN,'n15',15,C.vis);
+       node(gN,'n3',3,C.normal);node(gN,'n7',7,C.normal);
+       node(gN,'n12',12,C.succ);node(gN,'n20',20,C.normal);
+     }},
+    {acao:'Copia dado do sucessor → raiz vira 12',inorder:'3  5  7  10  12  15  20',
+     explain:'Copiamos o valor 12 para a raiz. Agora 12 aparece duas vezes. Próximo: remover o 12 original da subárvore direita (Caso 1 — folha).',
+     draw(gE,gN){
+       edge(gE,'n10','n5');edge(gE,'n10','n15');
+       edge(gE,'n5','n3');edge(gE,'n5','n7');
+       edge(gE,'n15','n12');edge(gE,'n15','n20');
+       node(gN,'n10',12,C.cur);node(gN,'n5',5,C.normal);node(gN,'n15',15,C.vis);
+       node(gN,'n3',3,C.normal);node(gN,'n7',7,C.normal);
+       node(gN,'n12',12,C.del);node(gN,'n20',20,C.normal);
+     }},
+    {acao:'Remove sucessor (folha) → Remoção concluída ✓',inorder:'3  5  7  12  15  20',
+     explain:'Sucessor 12 era folha → Caso 1. pai(15).esquerdo = null. BST válida — in-order: [3, 5, 7, 12, 15, 20].',
+     draw(gE,gN){
+       edge(gE,'n10','n5');edge(gE,'n10','n15');
+       edge(gE,'n5','n3');edge(gE,'n5','n7');edge(gE,'n15','n20');
+       node(gN,'n10',12,C.succ);node(gN,'n5',5,C.normal);node(gN,'n15',15,C.succ);
+       node(gN,'n3',3,C.normal);node(gN,'n7',7,C.normal);node(gN,'n20',20,C.normal);
+     }},
   ]},
 ];
 
-let curCase=0, idx=-1;
+let curCase=0,idx=-1;
 
 function applyStep(i){
   const steps=CASES[curCase].steps;
-  document.getElementById('g-edges').innerHTML='';
-  document.getElementById('g-nodes').innerHTML='';
   const gE=document.getElementById('g-edges');
   const gN=document.getElementById('g-nodes');
-
-  if(i<0){
-    steps[0].draw(gE,gN);
-    document.getElementById('explain').textContent='Clique em Próximo para iniciar.';
-    document.getElementById('acao').textContent='—';
-    document.getElementById('inorder').textContent=steps[0].inorder;
-    document.getElementById('counter').textContent=`Passo 0 de ${steps.length}`;
-    return;
-  }
-  const s=steps[i];
+  gE.innerHTML='';gN.innerHTML='';
+  const s=i<0?steps[0]:steps[i];
   s.draw(gE,gN);
-  document.getElementById('explain').textContent=s.explain;
-  document.getElementById('acao').textContent=s.acao;
+  document.getElementById('explain').textContent=i<0?'Clique em Próximo para iniciar.':s.explain;
+  document.getElementById('acao').textContent=i<0?'—':s.acao;
   document.getElementById('inorder').textContent=s.inorder;
-  document.getElementById('counter').textContent=`Passo ${i+1} de ${steps.length}`;
+  document.getElementById('counter').textContent=`Passo ${Math.max(0,i+1)} de ${steps.length}`;
 }
 
 function next(){const s=CASES[curCase].steps;if(idx<s.length-1){idx++;applyStep(idx);}}
@@ -277,9 +265,11 @@ function prev(){if(idx>-1){idx--;applyStep(idx);}}
 function reset(){idx=-1;applyStep(-1);}
 function setCase(c,el){
   curCase=c;idx=-1;
-  document.querySelectorAll('.btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   applyStep(-1);
 }
 applyStep(-1);
 </script>
+</body>
+</html>
