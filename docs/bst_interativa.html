@@ -1,0 +1,247 @@
+
+<style>
+h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.ctrl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.ctrl input{width:72px;font-size:14px}
+.ctrl button{font-size:13px}
+.log{font-family:var(--font-mono);font-size:12px;color:var(--color-text-secondary);min-height:20px;margin-bottom:8px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--color-text-secondary);margin-top:10px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;border:1.5px solid;vertical-align:middle;margin-right:3px}
+.info-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.chip{font-family:var(--font-mono);font-size:12px;padding:3px 10px;border-radius:20px;border:1px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text-secondary)}
+</style>
+
+<h2 class="sr-only">BST interativa — insira e busque valores para ver a propriedade de ordenação</h2>
+
+<div class="ctrl">
+  <input type="number" id="val" placeholder="valor" min="1" max="99" value="50">
+  <button onclick="doInsert()">Inserir</button>
+  <button onclick="doSearch()">Buscar</button>
+  <button onclick="doReset()">Limpar</button>
+</div>
+
+<div class="info-row">
+  <span class="chip" id="chip-n">nós: 0</span>
+  <span class="chip" id="chip-h">altura: −1</span>
+  <span class="chip" id="chip-cmp">comparações: —</span>
+</div>
+
+<div class="log" id="log">Insira um valor para começar.</div>
+
+<svg id="bst-svg" width="100%" viewBox="0 0 680 340" style="display:block;margin-bottom:4px">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <g id="edges"></g>
+  <g id="nodes"></g>
+  <text id="empty-msg" x="340" y="170" text-anchor="middle" font-size="13" fill="var(--color-text-tertiary)" font-family="var(--font-sans)">Árvore vazia — insira valores acima</text>
+</svg>
+
+<div class="legend">
+  <span><span class="dot" style="background:#E1F5EE;border-color:#1D9E75"></span>nó normal</span>
+  <span><span class="dot" style="background:#FAEEDA;border-color:#BA7517"></span>caminho de busca / inserção</span>
+  <span><span class="dot" style="background:#EAF3DE;border-color:#3B6D11"></span>encontrado</span>
+  <span><span class="dot" style="background:#FCEBEB;border-color:#A32D2D"></span>não encontrado</span>
+</div>
+
+<script>
+const SVG_W = 680, SVG_H = 340;
+const R = 22;
+
+let root = null;
+let animTimeout = null;
+
+function node(v){ return {v, left:null, right:null}; }
+
+function insert(r, v){
+  if(!r) return node(v);
+  if(v < r.v) r.left  = insert(r.left,  v);
+  else if(v > r.v) r.right = insert(r.right, v);
+  return r;
+}
+
+function height(r){ return r ? 1 + Math.max(height(r.left), height(r.right)) : -1; }
+function size(r){ return r ? 1 + size(r.left) + size(r.right) : 0; }
+
+function layout(r, x, y, dx){
+  if(!r) return;
+  r._x = x; r._y = y;
+  layout(r.left,  x - dx, y + 70, dx/2);
+  layout(r.right, x + dx, y + 70, dx/2);
+}
+
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+function render(highlight=[], found=null, notfound=false){
+  const edgesG = document.getElementById('edges');
+  const nodesG = document.getElementById('nodes');
+  const msg    = document.getElementById('empty-msg');
+  edgesG.innerHTML = '';
+  nodesG.innerHTML = '';
+
+  if(!root){ msg.style.display=''; return; }
+  msg.style.display='none';
+
+  const h = height(root);
+  const initDx = Math.max(30, Math.min(160, SVG_W / Math.pow(2, Math.max(1, Math.ceil(h/2)))));
+  layout(root, SVG_W/2, 44, initDx);
+
+  function drawEdges(r){
+    if(!r) return;
+    if(r.left){
+      const x1=clamp(r._x,R,SVG_W-R), y1=r._y;
+      const x2=clamp(r.left._x,R,SVG_W-R), y2=r.left._y;
+      const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',x1); line.setAttribute('y1',y1+R);
+      line.setAttribute('x2',x2); line.setAttribute('y2',y2-R);
+      line.setAttribute('stroke','var(--color-border-secondary)');
+      line.setAttribute('stroke-width','1.2');
+      edgesG.appendChild(line);
+      drawEdges(r.left);
+    }
+    if(r.right){
+      const x1=clamp(r._x,R,SVG_W-R), y1=r._y;
+      const x2=clamp(r.right._x,R,SVG_W-R), y2=r.right._y;
+      const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',x1); line.setAttribute('y1',y1+R);
+      line.setAttribute('x2',x2); line.setAttribute('y2',y2-R);
+      line.setAttribute('stroke','var(--color-border-secondary)');
+      line.setAttribute('stroke-width','1.2');
+      edgesG.appendChild(line);
+      drawEdges(r.right);
+    }
+  }
+  drawEdges(root);
+
+  function drawNodes(r){
+    if(!r) return;
+    const cx = clamp(r._x, R, SVG_W-R);
+    const cy = r._y;
+    const isHL  = highlight.includes(r.v);
+    const isFound   = found === r.v;
+    const isNF  = notfound && highlight.length>0 && highlight[highlight.length-1]===r.v;
+
+    let fill='#E1F5EE', stroke='#1D9E75', tc='#085041';
+    if(isFound){ fill='#EAF3DE'; stroke='#3B6D11'; tc='#27500A'; }
+    else if(isNF){ fill='#FCEBEB'; stroke='#A32D2D'; tc='#791F1F'; }
+    else if(isHL){ fill='#FAEEDA'; stroke='#BA7517'; tc='#633806'; }
+
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',cx); c.setAttribute('cy',cy); c.setAttribute('r',R);
+    c.setAttribute('fill',fill); c.setAttribute('stroke',stroke);
+    c.setAttribute('stroke-width','1.5');
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',cx); t.setAttribute('y',cy);
+    t.setAttribute('text-anchor','middle');
+    t.setAttribute('dominant-baseline','central');
+    t.setAttribute('font-size','13');
+    t.setAttribute('font-weight','500');
+    t.setAttribute('fill',tc);
+    t.setAttribute('font-family','var(--font-mono)');
+    t.textContent = r.v;
+    g.appendChild(c); g.appendChild(t);
+    nodesG.appendChild(g);
+    drawNodes(r.left);
+    drawNodes(r.right);
+  }
+  drawNodes(root);
+
+  document.getElementById('chip-n').textContent = `nós: ${size(root)}`;
+  document.getElementById('chip-h').textContent = `altura: ${height(root)}`;
+}
+
+function searchPath(r, v){
+  const path = [];
+  let cur = r;
+  while(cur){
+    path.push(cur.v);
+    if(v === cur.v) return { path, found:true };
+    cur = v < cur.v ? cur.left : cur.right;
+  }
+  return { path, found:false };
+}
+
+function insertPath(r, v){
+  const path = [];
+  let cur = r;
+  while(cur){
+    path.push(cur.v);
+    if(v === cur.v) return path;
+    cur = v < cur.v ? cur.left : cur.right;
+  }
+  return path;
+}
+
+function animatePath(path, targetV, mode, onDone){
+  if(animTimeout){ clearTimeout(animTimeout); }
+  let i = 0;
+  function step(){
+    if(i >= path.length){ onDone(); return; }
+    const cur = path[i];
+    const isLast = i === path.length - 1;
+    const hl = path.slice(0, i+1);
+    if(mode==='search'){
+      const isFound = isLast && cur === targetV;
+      const isNF    = isLast && cur !== targetV;
+      render(hl, isFound ? cur : null, isNF);
+      if(isLast){
+        const msg = isFound
+          ? `Encontrado: ${targetV} — ${i+1} comparação(ões)`
+          : `${targetV} não está na árvore — ${i+1} comparação(ões)`;
+        document.getElementById('log').textContent = msg;
+        document.getElementById('chip-cmp').textContent = `comparações: ${i+1}`;
+        return;
+      }
+    } else {
+      render(hl);
+      if(isLast){
+        render(hl, null, false);
+      }
+    }
+    i++;
+    animTimeout = setTimeout(step, 380);
+  }
+  step();
+}
+
+function doInsert(){
+  const v = parseInt(document.getElementById('val').value);
+  if(isNaN(v)||v<1||v>99){ setLog('Use um valor entre 1 e 99.'); return; }
+  const path = insertPath(root, v);
+  root = insert(root, v);
+  render(path.concat([v]), v);
+  setLog(`Inserido: ${v}  (caminho: ${path.concat([v]).join(' → ')})`);
+  document.getElementById('chip-cmp').textContent = `comparações: ${path.length+1}`;
+  document.getElementById('val').value = '';
+}
+
+function doSearch(){
+  const v = parseInt(document.getElementById('val').value);
+  if(isNaN(v)||v<1||v>99){ setLog('Use um valor entre 1 e 99.'); return; }
+  if(!root){ setLog('Árvore vazia.'); return; }
+  const {path, found} = searchPath(root, v);
+  document.getElementById('chip-cmp').textContent = `comparações: ${path.length}`;
+  animatePath(path, v, 'search', ()=>{});
+}
+
+function doReset(){
+  root = null;
+  render();
+  setLog('Árvore limpa.');
+  document.getElementById('chip-n').textContent = 'nós: 0';
+  document.getElementById('chip-h').textContent = 'altura: −1';
+  document.getElementById('chip-cmp').textContent = 'comparações: —';
+}
+
+function setLog(msg){ document.getElementById('log').textContent = msg; }
+
+root = null;
+[40,20,60,10,30,50,70].forEach(v=>{ root=insert(root,v); });
+render();
+setLog('Árvore de exemplo carregada. Insira ou busque um valor.');
+document.getElementById('chip-n').textContent = `nós: ${size(root)}`;
+document.getElementById('chip-h').textContent = `altura: ${height(root)}`;
+</script>
