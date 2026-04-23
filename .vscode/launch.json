@@ -1,0 +1,104 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "SimulacaoPedidos",
+      "request": "launch",
+      "mainClass": "estruturas.SimulacaoPedidos",
+      "projectName": "aulas-ed"
+    },
+    {
+      "type": "java",
+      "name": "VerificadorBalanceamento",
+      "request": "launch",
+      "mainClass": "estruturas.VerificadorBalanceamento",
+      "projectName": "aulas-ed"
+    },
+    {
+      "type": "java",
+      "name": "BenchmarkInsercao",
+      "request": "launch",
+      "mainClass": "benchmarks.BenchmarkInsercao",
+      "projectName": "aulas-ed"
+    },
+    {
+      "type": "java",
+      "name": "ArrayDinamico",
+      "request": "launch",
+      "mainClass": "arraysdinamicos.ArrayDinamico",
+      "projectName": "aulas-ed"
+    },
+    {
+      "type": "java",
+      "name": "Teste",
+      "request": "launch",
+      "mainClass": "arraysdinamicos.Teste",
+      "projectName": "aulas-ed"
+    },
+    {
+      "type": "java",
+      "name": "TesteVazamentoMemoria",
+      "request": "launch",
+      "mainClass": "arraysdinamicos.TesteVazamentoMemoria",
+      "projectName": "aula_a7cb39e3",
+      "vmArgs": "-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8"
+    },
+    {
+      "type": "java",
+      "name": "Launch com Profiling",
+      "request": "launch",
+      "mainClass": "arraysdinamicos.TesteVazamentoMemoria",
+      "vmArgs": "-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -XX:StartFlightRecording=duration=10s,filename=perfil.jfr "
+    },
+    {
+      "type": "java",
+      "name": "Fatorial",
+      "request": "launch",
+      "mainClass": "recursao.Fatorial",
+      "projectName": "aula_a7cb39e3",
+      "vmArgs": "-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8"
+    },
+    {
+      "type": "java",
+      "name": "Fibonacci",
+      "request": "launch",
+      "mainClass": "recursao.Fibonacci",
+      "projectName": "aula_a7cb39e3",
+      "vmArgs": "-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8"
+    },
+    {
+      "type": "java",
+      "name": "ExemploRecursao",
+      "request": "launch",
+      "mainClass": "recursao.ExemploRecursao",
+      "projectName": "aula_a7cb39e3",
+      "vmArgs": "-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8"
+    },
+    {
+      "type": "java",
+      "name": "solucoes",
+      "request": "launch",
+      "mainClass": "bigO.solucoes",
+      "projectName": "aula_a7cb39e3",
+      "vmArgs": "-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8"
+    },
+    {
+      "type": "java",
+      "name": "Launch Java Program",
+      "request": "launch",
+      "mainClass": "",
+      "vmArgs": "-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8"
+    },
+    {
+      "type": "java",
+      "name": "Current File",
+      "request": "launch",
+      "mainClass": "${file}",
+      "vmArgs": "-Dfile.encoding=UTF-8 -Dsun.stdout.encoding=UTF-8 -Dsun.stderr.encoding=UTF-8 -Xmx12G"
+    }
+  ]
+}

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Percursos em Árvore Binária — Estrutura de Dados IFTM</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0D1117;
+    --surface:  #161B22;
+    --border:   #30363D;
+    --teal:     #1D9E75;
+    --teal-dim: #0F6E56;
+    --teal-bg:  #0a2e22;
+    --amber:    #E8A020;
+    --amber-bg: #2e1f08;
+    --purple:   #7C6FCD;
+    --purple-bg:#1e1a3a;
+    --text:     #E6EDF3;
+    --muted:    #8B949E;
+    --mono:     'IBM Plex Mono', monospace;
+    --sans:     'Sora', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 60px;
+  }
+
+  header {
+    width: 100%;
+    max-width: 780px;
+    margin-bottom: 32px;
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .08em;
+    background: var(--teal-bg);
+    color: var(--teal);
+    border: 1px solid var(--teal-dim);
+    border-radius: 4px;
+    padding: 3px 8px;
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-size: clamp(20px, 3vw, 26px);
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .card {
+    width: 100%;
+    max-width: 780px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab {
+    flex: 1;
+    min-width: 120px;
+    padding: 14px 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color .15s, border-color .15s, background .15s;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--text); background: rgba(255,255,255,.03); }
+  .tab.active { color: var(--teal); border-bottom-color: var(--teal); background: var(--teal-bg); }
+
+  /* ── Body ── */
+  .card-body { padding: 24px; }
+
+  .desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 20px;
+    padding: 10px 14px;
+    border-left: 2px solid var(--teal-dim);
+    background: var(--teal-bg);
+    border-radius: 0 6px 6px 0;
+  }
+
+  /* ── SVG árvore ── */
+  #tree-svg { display: block; width: 100%; margin-bottom: 20px; }
+
+  /* ── Controles ── */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 7px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .btn:hover { background: #21262D; border-color: #8B949E; }
+  .btn:active { background: #161B22; }
+  .btn.reset { color: var(--muted); }
+
+  .step-counter {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ── Painéis de info ── */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  @media (max-width: 520px) { .info-grid { grid-template-columns: 1fr; } }
+
+  .info-panel {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .info-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .seq-display {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--teal);
+    letter-spacing: .05em;
+    min-height: 24px;
+  }
+
+  .explain-text {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 40px;
+  }
+
+  /* ── Complexidade ── */
+  .complexity {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+  .chip.time  { color: var(--amber); border-color: #5a3e10; background: var(--amber-bg); }
+  .chip.space { color: var(--purple); border-color: #3a3260; background: var(--purple-bg); }
+
+  /* ── Legenda ── */
+  .legend {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid; }
+  .dot.unvisited { background: #0a2e22; border-color: #1D9E75; }
+  .dot.current   { background: #2e1f08; border-color: #E8A020; }
+  .dot.visited   { background: #1e1a3a; border-color: #7C6FCD; }
+
+  /* ── Footer ── */
+  footer {
+    margin-top: 28px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    opacity: .6;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">IFTM · Estrutura de Dados · 2026/1</div>
+  <h1>Percursos em Árvore Binária</h1>
+  <p class="subtitle">Visualização interativa — Semana 7</p>
+</header>
+
+<div class="card">
+  <div class="tabs">
+    <button class="tab active" onclick="setMode('inorder',this)">In-Order</button>
+    <button class="tab" onclick="setMode('preorder',this)">Pre-Order</button>
+    <button class="tab" onclick="setMode('postorder',this)">Post-Order</button>
+    <button class="tab" onclick="setMode('levelorder',this)">Level-Order</button>
+  </div>
+
+  <div class="card-body">
+    <div class="desc" id="desc-box"></div>
+
+    <svg id="tree-svg" viewBox="0 0 680 220">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+      <!-- Arestas -->
+      <line x1="340" y1="46" x2="210" y2="106" stroke="#30363D" stroke-width="1.5"/>
+      <line x1="340" y1="46" x2="470" y2="106" stroke="#30363D" stroke-width="1.5"/>
+      <line x1="210" y1="126" x2="145" y2="176" stroke="#30363D" stroke-width="1.5"/>
+      <line x1="210" y1="126" x2="275" y2="176" stroke="#30363D" stroke-width="1.5"/>
+      <line x1="470" y1="126" x2="405" y2="176" stroke="#30363D" stroke-width="1.5"/>
+      <line x1="470" y1="126" x2="535" y2="176" stroke="#30363D" stroke-width="1.5"/>
+      <!-- Nós -->
+      <g id="n-4"><circle cx="340" cy="36"  r="26" fill="#0a2e22" stroke="#1D9E75" stroke-width="1.5"/><text x="340" y="36"  text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="600" fill="#1D9E75" font-family="'IBM Plex Mono',monospace">4</text></g>
+      <g id="n-2"><circle cx="210" cy="116" r="26" fill="#0a2e22" stroke="#1D9E75" stroke-width="1.5"/><text x="210" y="116" text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="600" fill="#1D9E75" font-family="'IBM Plex Mono',monospace">2</text></g>
+      <g id="n-6"><circle cx="470" cy="116" r="26" fill="#0a2e22" stroke="#1D9E75" stroke-width="1.5"/><text x="470" y="116" text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="600" fill="#1D9E75" font-family="'IBM Plex Mono',monospace">6</text></g>
+      <g id="n-1"><circle cx="145" cy="192" r="26" fill="#0a2e22" stroke="#1D9E75" stroke-width="1.5"/><text x="145" y="192" text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="600" fill="#1D9E75" font-family="'IBM Plex Mono',monospace">1</text></g>
+      <g id="n-3"><circle cx="275" cy="192" r="26" fill="#0a2e22" stroke="#1D9E75" stroke-width="1.5"/><text x="275" y="192" text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="600" fill="#1D9E75" font-family="'IBM Plex Mono',monospace">3</text></g>
+      <g id="n-5"><circle cx="405" cy="192" r="26" fill="#0a2e22" stroke="#1D9E75" stroke-width="1.5"/><text x="405" y="192" text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="600" fill="#1D9E75" font-family="'IBM Plex Mono',monospace">5</text></g>
+      <g id="n-7"><circle cx="535" cy="192" r="26" fill="#0a2e22" stroke="#1D9E75" stroke-width="1.5"/><text x="535" y="192" text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="600" fill="#1D9E75" font-family="'IBM Plex Mono',monospace">7</text></g>
+    </svg>
+
+    <div class="controls">
+      <button class="btn" onclick="prev()">← Anterior</button>
+      <button class="btn" onclick="next()">Próximo →</button>
+      <button class="btn reset" onclick="reset()">↺ Reiniciar</button>
+      <span class="step-counter" id="step-counter">Passo 0 de 7</span>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-panel">
+        <div class="info-label">Sequência visitada</div>
+        <div class="seq-display" id="seq-box">—</div>
+      </div>
+      <div class="info-panel">
+        <div class="info-label">O que está acontecendo</div>
+        <div class="explain-text" id="explain-box">Clique em Próximo para iniciar.</div>
+      </div>
+    </div>
+
+    <div class="info-panel" style="margin-bottom:0">
+      <div class="info-label">Complexidade</div>
+      <div class="complexity" id="complexity-box"></div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="dot unvisited"></div>não visitado</div>
+      <div class="legend-item"><div class="dot current"></div>visitando agora</div>
+      <div class="legend-item"><div class="dot visited"></div>já visitado</div>
+    </div>
+  </div>
+</div>
+
+<footer>Instituto Federal do Triângulo Mineiro · Sistemas para Internet · Estrutura de Dados 2026/1</footer>
+
+<script>
+const modes = {
+  inorder: {
+    desc: 'Visita a subárvore esquerda, depois a raiz, depois a subárvore direita. Numa BST produz os elementos em ordem crescente.',
+    time: 'Θ(n) tempo',
+    space: 'O(h) espaço — pilha de chamadas',
+    steps: [
+      { node:'1', seq:[1],               explain:'Desce até o nó mais à esquerda (1). Não tem filho esquerdo → visita 1.' },
+      { node:'2', seq:[1,2],             explain:'Sobe para o pai (2). Filho esquerdo já visitado → visita 2.' },
+      { node:'3', seq:[1,2,3],           explain:'Vai para o filho direito de 2, que é 3. Sem filhos → visita 3.' },
+      { node:'4', seq:[1,2,3,4],         explain:'Sobe para a raiz (4). Subárvore esquerda concluída → visita 4.' },
+      { node:'5', seq:[1,2,3,4,5],       explain:'Entra na subárvore direita. Desce até 5 (filho esquerdo de 6) → visita 5.' },
+      { node:'6', seq:[1,2,3,4,5,6],     explain:'Sobe para 6. Filho esquerdo visitado → visita 6.' },
+      { node:'7', seq:[1,2,3,4,5,6,7],   explain:'Vai para o filho direito de 6, que é 7. Sem filhos → visita 7. Percurso concluído.' },
+    ]
+  },
+  preorder: {
+    desc: 'Visita a raiz antes dos filhos (raiz → esquerdo → direito). Útil para copiar ou serializar a estrutura da árvore.',
+    time: 'Θ(n) tempo',
+    space: 'O(h) espaço — pilha de chamadas',
+    steps: [
+      { node:'4', seq:[4],                 explain:'Raiz: visita 4 imediatamente antes de descer para qualquer filho.' },
+      { node:'2', seq:[4,2],               explain:'Desce para o filho esquerdo da raiz (2) → visita 2.' },
+      { node:'1', seq:[4,2,1],             explain:'Desce para o filho esquerdo de 2 (1). Sem filhos → visita 1.' },
+      { node:'3', seq:[4,2,1,3],           explain:'Filho direito de 2 é 3. Sem filhos → visita 3.' },
+      { node:'6', seq:[4,2,1,3,6],         explain:'Subárvore esquerda concluída. Desce para filho direito da raiz (6) → visita 6.' },
+      { node:'5', seq:[4,2,1,3,6,5],       explain:'Filho esquerdo de 6 é 5. Sem filhos → visita 5.' },
+      { node:'7', seq:[4,2,1,3,6,5,7],     explain:'Filho direito de 6 é 7. Sem filhos → visita 7. Percurso concluído.' },
+    ]
+  },
+  postorder: {
+    desc: 'Visita a raiz depois dos filhos (esquerdo → direito → raiz). Útil para deletar a árvore ou avaliar expressões aritméticas.',
+    time: 'Θ(n) tempo',
+    space: 'O(h) espaço — pilha de chamadas',
+    steps: [
+      { node:'1', seq:[1],                 explain:'Desce até o nó mais à esquerda (1). Sem filhos → visita 1.' },
+      { node:'3', seq:[1,3],               explain:'Filho direito de 2 é 3. Sem filhos → visita 3.' },
+      { node:'2', seq:[1,3,2],             explain:'Ambos os filhos de 2 visitados → agora visita 2.' },
+      { node:'5', seq:[1,3,2,5],           explain:'Entra na subárvore direita. Filho esquerdo de 6 é 5. Sem filhos → visita 5.' },
+      { node:'7', seq:[1,3,2,5,7],         explain:'Filho direito de 6 é 7. Sem filhos → visita 7.' },
+      { node:'6', seq:[1,3,2,5,7,6],       explain:'Ambos os filhos de 6 visitados → agora visita 6.' },
+      { node:'4', seq:[1,3,2,5,7,6,4],     explain:'Ambas as subárvores concluídas → visita a raiz 4 por último. Percurso concluído.' },
+    ]
+  },
+  levelorder: {
+    desc: 'Usa uma fila (Queue) em vez de recursão. Visita todos os nós de um nível antes de descer para o próximo — BFS na árvore.',
+    time: 'Θ(n) tempo',
+    space: 'O(w) espaço — w = largura máxima da árvore',
+    steps: [
+      { node:'4', seq:[4],                 explain:'Fila: [4]. Remove 4, visita. Enfileira filhos: fila = [2, 6].' },
+      { node:'2', seq:[4,2],               explain:'Fila: [2,6]. Remove 2, visita. Enfileira filhos: fila = [6, 1, 3].' },
+      { node:'6', seq:[4,2,6],             explain:'Fila: [6,1,3]. Remove 6, visita. Enfileira filhos: fila = [1, 3, 5, 7].' },
+      { node:'1', seq:[4,2,6,1],           explain:'Fila: [1,3,5,7]. Remove 1, visita. Sem filhos: fila = [3, 5, 7].' },
+      { node:'3', seq:[4,2,6,1,3],         explain:'Fila: [3,5,7]. Remove 3, visita. Sem filhos: fila = [5, 7].' },
+      { node:'5', seq:[4,2,6,1,3,5],       explain:'Fila: [5,7]. Remove 5, visita. Sem filhos: fila = [7].' },
+      { node:'7', seq:[4,2,6,1,3,5,7],     explain:'Fila: [7]. Remove 7, visita. Sem filhos: fila = []. Percurso concluído.' },
+    ]
+  }
+};
+
+const allNodes = ['1','2','3','4','5','6','7'];
+let mode = 'inorder';
+let stepIdx = -1;
+
+function nEl(v) { return document.getElementById('n-'+v); }
+
+function resetColors() {
+  allNodes.forEach(v => {
+    const g = nEl(v);
+    g.querySelector('circle').setAttribute('fill','#0a2e22');
+    g.querySelector('circle').setAttribute('stroke','#1D9E75');
+    g.querySelector('text').setAttribute('fill','#1D9E75');
+  });
+}
+
+function applyStep(idx) {
+  resetColors();
+  const m = modes[mode];
+  if (idx < 0) {
+    document.getElementById('seq-box').textContent = '—';
+    document.getElementById('explain-box').textContent = 'Clique em Próximo para iniciar.';
+    document.getElementById('step-counter').textContent = `Passo 0 de ${m.steps.length}`;
+    return;
+  }
+  const s = m.steps[idx];
+  for (let i = 0; i < idx; i++) {
+    const g = nEl(String(m.steps[i].node));
+    g.querySelector('circle').setAttribute('fill','#1e1a3a');
+    g.querySelector('circle').setAttribute('stroke','#7C6FCD');
+    g.querySelector('text').setAttribute('fill','#7C6FCD');
+  }
+  const g = nEl(s.node);
+  g.querySelector('circle').setAttribute('fill','#2e1f08');
+  g.querySelector('circle').setAttribute('stroke','#E8A020');
+  g.querySelector('text').setAttribute('fill','#E8A020');
+
+  document.getElementById('seq-box').textContent = s.seq.join('  →  ');
+  document.getElementById('explain-box').textContent = s.explain;
+  document.getElementById('step-counter').textContent = `Passo ${idx+1} de ${m.steps.length}`;
+}
+
+function next() {
+  if (stepIdx < modes[mode].steps.length - 1) { stepIdx++; applyStep(stepIdx); }
+}
+function prev() {
+  if (stepIdx > -1) { stepIdx--; applyStep(stepIdx); }
+}
+function reset() { stepIdx = -1; applyStep(-1); }
+
+function setMode(m, tabEl) {
+  mode = m;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  const md = modes[m];
+  document.getElementById('desc-box').textContent = md.desc;
+  document.getElementById('complexity-box').innerHTML =
+    `<span class="chip time">⏱ ${md.time}</span><span class="chip space">📦 ${md.space}</span>`;
+  reset();
+}
+
+// Inicializa
+setMode('inorder', document.querySelector('.tab.active'));
+</script>
+</body>
+</html>
