@@ -1,54 +1,159 @@
-
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BST Interativa — Estrutura de Dados IFTM</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
-.ctrl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-.ctrl input{width:72px;font-size:14px}
-.ctrl button{font-size:13px}
-.log{font-family:var(--font-mono);font-size:12px;color:var(--color-text-secondary);min-height:18px;margin-bottom:8px}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--color-text-secondary);margin-top:8px}
-.dot{display:inline-block;width:10px;height:10px;border-radius:50%;border:1.5px solid;vertical-align:middle;margin-right:3px}
-.info-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
-.chip{font-family:var(--font-mono);font-size:12px;padding:3px 10px;border-radius:20px;border:1px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text-secondary)}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:      #0D1117;
+  --surface: #161B22;
+  --border:  #30363D;
+  --edge:    #4a5568;
+  --text:    #E6EDF3;
+  --muted:   #8B949E;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'Sora', sans-serif;
+  --teal:    #1D9E75;
+  --teal-bg: #0a2e22;
+  --teal-dk: #085041;
+  --amber:   #BA7517;
+  --amber-bg:#2e1f08;
+  --amber-dk:#633806;
+  --green:   #3B6D11;
+  --green-bg:#1a2e0a;
+  --green-dk:#27500A;
+  --red:     #A32D2D;
+  --red-bg:  #2e0a0a;
+  --red-dk:  #791F1F;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 20px 60px;
+}
+header { width: 100%; max-width: 820px; margin-bottom: 24px; }
+.badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .08em;
+  background: var(--teal-bg);
+  color: var(--teal);
+  border: 1px solid #0F6E56;
+  border-radius: 4px;
+  padding: 3px 8px;
+  margin-bottom: 10px;
+}
+h1 { font-size: clamp(18px,3vw,24px); font-weight: 600; margin-bottom: 4px; }
+.subtitle { font-size: 13px; color: var(--muted); font-family: var(--mono); }
+.card {
+  width: 100%;
+  max-width: 820px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px 24px;
+}
+.ctrl { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.ctrl input {
+  width: 80px; font-size: 14px; font-family: var(--mono);
+  background: var(--bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;
+}
+.ctrl input:focus { outline: none; border-color: var(--teal); }
+.ctrl button {
+  padding: 7px 16px; border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg); color: var(--text);
+  font-family: var(--mono); font-size: 12px; cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.ctrl button:hover { background: #21262D; border-color: var(--muted); }
+.info-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.chip {
+  font-family: var(--mono); font-size: 12px; padding: 3px 10px;
+  border-radius: 20px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--muted);
+}
+.log {
+  font-family: var(--mono); font-size: 12px; color: var(--muted);
+  min-height: 18px; margin-bottom: 10px;
+}
+#bst-svg { display: block; width: 100%; }
+.legend {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  font-size: 12px; color: var(--muted); margin-top: 12px;
+  padding-top: 12px; border-top: 1px solid var(--border);
+}
+.dot {
+  display: inline-block; width: 10px; height: 10px;
+  border-radius: 50%; border: 1.5px solid;
+  vertical-align: middle; margin-right: 4px;
+}
+footer {
+  margin-top: 24px; font-family: var(--mono);
+  font-size: 11px; color: var(--muted); opacity: .5; text-align: center;
+}
 </style>
+</head>
+<body>
+<header>
+  <div class="badge">IFTM · Estrutura de Dados · 2026/1</div>
+  <h1>BST — Árvore Binária de Busca</h1>
+  <p class="subtitle">Visualização interativa · Semana 8</p>
+</header>
 
-<h2 class="sr-only">BST interativa — insira e busque valores para ver a propriedade de ordenação</h2>
+<div class="card">
+  <div class="ctrl">
+    <input type="number" id="val" placeholder="valor" min="1" max="99" value="">
+    <button onclick="doInsert()">Inserir</button>
+    <button onclick="doSearch()">Buscar</button>
+    <button onclick="doReset()">Limpar</button>
+  </div>
 
-<div class="ctrl">
-  <input type="number" id="val" placeholder="valor" min="1" max="99" value="50">
-  <button onclick="doInsert()">Inserir</button>
-  <button onclick="doSearch()">Buscar</button>
-  <button onclick="doReset()">Limpar</button>
+  <div class="info-row">
+    <span class="chip" id="chip-n">nós: 0</span>
+    <span class="chip" id="chip-h">altura: −1</span>
+    <span class="chip" id="chip-cmp">comparações: —</span>
+  </div>
+
+  <div class="log" id="log">Insira um valor para começar.</div>
+
+  <svg id="bst-svg" viewBox="0 0 780 360">
+    <g id="edges"></g>
+    <g id="nodes"></g>
+    <text id="empty-msg" x="390" y="180" text-anchor="middle"
+          font-size="14" fill="#4a5568" font-family="'Sora',sans-serif">
+      Árvore vazia — insira valores acima
+    </text>
+  </svg>
+
+  <div class="legend">
+    <span><span class="dot" style="background:#0a2e22;border-color:#1D9E75"></span>nó normal</span>
+    <span><span class="dot" style="background:#2e1f08;border-color:#BA7517"></span>caminho de busca/inserção</span>
+    <span><span class="dot" style="background:#1a2e0a;border-color:#3B6D11"></span>encontrado</span>
+    <span><span class="dot" style="background:#2e0a0a;border-color:#A32D2D"></span>não encontrado</span>
+  </div>
 </div>
 
-<div class="info-row">
-  <span class="chip" id="chip-n">nós: 0</span>
-  <span class="chip" id="chip-h">altura: −1</span>
-  <span class="chip" id="chip-cmp">comparações: —</span>
-</div>
-
-<div class="log" id="log">Insira um valor para começar.</div>
-
-<svg id="bst-svg" width="100%" viewBox="0 0 680 360" style="display:block;margin-bottom:4px">
-  <g id="edges"></g>
-  <g id="nodes"></g>
-  <text id="empty-msg" x="340" y="180" text-anchor="middle" font-size="13"
-        fill="var(--color-text-tertiary)" font-family="var(--font-sans)">
-    Árvore vazia — insira valores acima
-  </text>
-</svg>
-
-<div class="legend">
-  <span><span class="dot" style="background:#E1F5EE;border-color:#1D9E75"></span>nó normal</span>
-  <span><span class="dot" style="background:#FAEEDA;border-color:#BA7517"></span>caminho de busca/inserção</span>
-  <span><span class="dot" style="background:#EAF3DE;border-color:#3B6D11"></span>encontrado</span>
-  <span><span class="dot" style="background:#FCEBEB;border-color:#A32D2D"></span>não encontrado</span>
-</div>
+<footer>Instituto Federal do Triângulo Mineiro · Sistemas para Internet · Estrutura de Dados 2026/1</footer>
 
 <script>
-const R = 20;
-const SVG_W = 680;
-const LEVEL_H = 72;
-const PAD = 30;
+const SVG_W = 780;
+const SVG_H = 360;
+const R = 22;
+const LEVEL_H = 74;
+const PAD = 36;
+const EDGE_COLOR = '#4a5568';
+const FONT = "'IBM Plex Mono', monospace";
 
 let root = null;
 let animTimer = null;
@@ -62,41 +167,38 @@ function insert(r, v){
   return r;
 }
 
-function height(r){ return r ? 1 + Math.max(height(r.left), height(r.right)) : -1; }
-function count(r) { return r ? 1 + count(r.left) + count(r.right) : 0; }
+function treeHeight(r){ return r ? 1 + Math.max(treeHeight(r.left), treeHeight(r.right)) : -1; }
+function treeCount(r) { return r ? 1 + treeCount(r.left) + treeCount(r.right) : 0; }
 
-/* ── Layout: calcula posições x,y para cada nó ──────────────────────
-   Estratégia: in-order traversal com contador global.
-   Garante que nenhum nó se sobreponha, independente do balanço.     */
-function computeLayout(r, depth, counter){
+/* In-order layout: distribui nós uniformemente no eixo X */
+function computeLayout(r, depth, counter, total){
   if(!r) return;
-  computeLayout(r.left, depth+1, counter);
-  r._x = PAD + counter.i * ((SVG_W - 2*PAD) / (count(root) - 1 || 1));
+  computeLayout(r.left, depth + 1, counter, total);
+  const slots = total - 1 || 1;
+  r._x = PAD + counter.i * ((SVG_W - 2 * PAD) / slots);
   r._y = 36 + depth * LEVEL_H;
   counter.i++;
-  computeLayout(r.right, depth+1, counter);
+  computeLayout(r.right, depth + 1, counter, total);
 }
 
 function layout(){
   if(!root) return;
-  const n = count(root);
+  const n = treeCount(root);
   if(n === 1){
     root._x = SVG_W / 2;
     root._y = 36;
     return;
   }
-  computeLayout(root, 0, {i:0});
+  computeLayout(root, 0, {i: 0}, n);
 }
 
-/* ── SVG helpers ─────────────────────────────────────────────────── */
 function svgEl(tag, attrs){
   const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
-  for(const [k,v] of Object.entries(attrs)) el.setAttribute(k, v);
+  for(const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
   return el;
 }
 
-/* ── Render ──────────────────────────────────────────────────────── */
-function render(highlight=[], found=null, notFound=false){
+function render(highlight = [], found = null, notFound = false){
   const edgesG = document.getElementById('edges');
   const nodesG = document.getElementById('nodes');
   edgesG.innerHTML = '';
@@ -104,46 +206,52 @@ function render(highlight=[], found=null, notFound=false){
   document.getElementById('empty-msg').style.display = root ? 'none' : '';
   if(!root) return;
 
-  layout();   /* sempre calcular antes de desenhar */
+  layout();
 
-  /* arestas primeiro (ficam por baixo) */
+  /* --- arestas com cor hardcoded para funcionar fora do claude.ai --- */
   (function drawEdges(r){
     if(!r) return;
     if(r.left){
-      edgesG.appendChild(svgEl('line',{
-        x1:r._x, y1:r._y + R, x2:r.left._x, y2:r.left._y - R,
-        stroke:'var(--color-border-secondary)', 'stroke-width':'1.2'
+      edgesG.appendChild(svgEl('line', {
+        x1: r._x,      y1: r._y + R,
+        x2: r.left._x, y2: r.left._y - R,
+        stroke: EDGE_COLOR, 'stroke-width': '1.5'
       }));
       drawEdges(r.left);
     }
     if(r.right){
-      edgesG.appendChild(svgEl('line',{
-        x1:r._x, y1:r._y + R, x2:r.right._x, y2:r.right._y - R,
-        stroke:'var(--color-border-secondary)', 'stroke-width':'1.2'
+      edgesG.appendChild(svgEl('line', {
+        x1: r._x,       y1: r._y + R,
+        x2: r.right._x, y2: r.right._y - R,
+        stroke: EDGE_COLOR, 'stroke-width': '1.5'
       }));
       drawEdges(r.right);
     }
   })(root);
 
-  /* nós por cima */
+  /* --- nós --- */
   const hlSet = new Set(highlight);
   (function drawNodes(r){
     if(!r) return;
     const isFound = found === r.v;
-    const isNF    = notFound && hlSet.has(r.v) && r.v === highlight[highlight.length-1];
+    const isNF    = notFound && hlSet.has(r.v) && r.v === highlight[highlight.length - 1];
     const isHL    = hlSet.has(r.v);
 
-    let fill='#E1F5EE', stroke='#1D9E75', tc='#085041';
-    if(isFound)     { fill='#EAF3DE'; stroke='#3B6D11'; tc='#27500A'; }
-    else if(isNF)   { fill='#FCEBEB'; stroke='#A32D2D'; tc='#791F1F'; }
-    else if(isHL)   { fill='#FAEEDA'; stroke='#BA7517'; tc='#633806'; }
+    let fill = '#0a2e22', stroke = '#1D9E75', tc = '#5DCAA5';
+    if(isFound)   { fill = '#1a2e0a'; stroke = '#3B6D11'; tc = '#97C459'; }
+    else if(isNF) { fill = '#2e0a0a'; stroke = '#A32D2D'; tc = '#F09595'; }
+    else if(isHL) { fill = '#2e1f08'; stroke = '#BA7517'; tc = '#EF9F27'; }
 
-    const g = svgEl('g',{});
-    g.appendChild(svgEl('circle',{cx:r._x, cy:r._y, r:R, fill, stroke, 'stroke-width':'1.5'}));
-    const t = svgEl('text',{
-      x:r._x, y:r._y, 'text-anchor':'middle', 'dominant-baseline':'central',
-      'font-size':'12', 'font-weight':'500', fill:tc,
-      'font-family':'var(--font-mono)'
+    const g = svgEl('g', {});
+    g.appendChild(svgEl('circle', {
+      cx: r._x, cy: r._y, r: R,
+      fill, stroke, 'stroke-width': '2'
+    }));
+    const t = svgEl('text', {
+      x: r._x, y: r._y,
+      'text-anchor': 'middle', 'dominant-baseline': 'central',
+      'font-size': '13', 'font-weight': '500',
+      fill: tc, 'font-family': FONT
     });
     t.textContent = r.v;
     g.appendChild(t);
@@ -152,44 +260,41 @@ function render(highlight=[], found=null, notFound=false){
     drawNodes(r.right);
   })(root);
 
-  document.getElementById('chip-n').textContent = `nós: ${count(root)}`;
-  document.getElementById('chip-h').textContent = `altura: ${height(root)}`;
+  document.getElementById('chip-n').textContent = `nós: ${treeCount(root)}`;
+  document.getElementById('chip-h').textContent = `altura: ${treeHeight(root)}`;
 }
 
-/* ── Busca com caminho ───────────────────────────────────────────── */
 function searchPath(v){
-  const path=[]; let cur=root;
+  const path = []; let cur = root;
   while(cur){
     path.push(cur.v);
-    if(v===cur.v) return {path, found:true};
+    if(v === cur.v) return {path, found: true};
     cur = v < cur.v ? cur.left : cur.right;
   }
-  return {path, found:false};
+  return {path, found: false};
 }
 
 function insertPath(v){
-  const path=[]; let cur=root;
-  while(cur){ path.push(cur.v); cur = v<cur.v ? cur.left : cur.right; }
+  const path = []; let cur = root;
+  while(cur){ path.push(cur.v); cur = v < cur.v ? cur.left : cur.right; }
   return path;
 }
 
-/* ── Animação passo a passo ─────────────────────────────────────── */
 function animate(path, targetV, mode){
   if(animTimer) clearTimeout(animTimer);
-  let i=0;
+  let i = 0;
   function step(){
-    const hl = path.slice(0, i+1);
-    const isLast = i===path.length-1;
-    if(mode==='search'){
-      const fd = isLast && path[i]===targetV ? targetV : null;
-      const nf = isLast && path[i]!==targetV;
+    const hl = path.slice(0, i + 1);
+    const isLast = i === path.length - 1;
+    if(mode === 'search'){
+      const fd = isLast && path[i] === targetV ? targetV : null;
+      const nf = isLast && path[i] !== targetV;
       render(hl, fd, nf);
       if(isLast){
-        const cmp = path.length;
-        document.getElementById('chip-cmp').textContent = `comparações: ${cmp}`;
+        document.getElementById('chip-cmp').textContent = `comparações: ${path.length}`;
         document.getElementById('log').textContent = fd
-          ? `Encontrado: ${targetV} em ${cmp} comparação(ões)`
-          : `${targetV} não está na árvore — ${cmp} comparação(ões)`;
+          ? `Encontrado: ${targetV} em ${path.length} comparação(ões)`
+          : `${targetV} não está na árvore — ${path.length} comparação(ões)`;
         return;
       }
     } else {
@@ -197,47 +302,53 @@ function animate(path, targetV, mode){
       if(isLast) return;
     }
     i++;
-    animTimer = setTimeout(step, 380);
+    animTimer = setTimeout(step, 400);
   }
   step();
 }
 
-/* ── Ações do usuário ───────────────────────────────────────────── */
 function doInsert(){
   const v = parseInt(document.getElementById('val').value);
-  if(isNaN(v)||v<1||v>99){ log('Use um valor entre 1 e 99.'); return; }
+  if(isNaN(v) || v < 1 || v > 99){ setLog('Use um valor entre 1 e 99.'); return; }
   const path = insertPath(v);
   root = insert(root, v);
-  const fullPath = path.concat([v]);
-  animate(fullPath, v, 'insert');
-  document.getElementById('chip-cmp').textContent = `comparações: ${fullPath.length}`;
-  log(`Inserido: ${v}  (caminho: ${fullPath.join(' → ')})`);
-  document.getElementById('val').value='';
+  const full = path.concat([v]);
+  animate(full, v, 'insert');
+  document.getElementById('chip-cmp').textContent = `comparações: ${full.length}`;
+  setLog(`Inserido: ${v}  (caminho: ${full.join(' → ')})`);
+  document.getElementById('val').value = '';
 }
 
 function doSearch(){
   const v = parseInt(document.getElementById('val').value);
-  if(isNaN(v)||v<1||v>99){ log('Use um valor entre 1 e 99.'); return; }
-  if(!root){ log('Árvore vazia.'); return; }
-  const {path, found} = searchPath(v);
+  if(isNaN(v) || v < 1 || v > 99){ setLog('Use um valor entre 1 e 99.'); return; }
+  if(!root){ setLog('Árvore vazia.'); return; }
+  const {path} = searchPath(v);
   animate(path, v, 'search');
 }
 
 function doReset(){
   if(animTimer) clearTimeout(animTimer);
-  root=null; render();
-  log('Árvore limpa.');
-  document.getElementById('chip-n').textContent='nós: 0';
-  document.getElementById('chip-h').textContent='altura: −1';
-  document.getElementById('chip-cmp').textContent='comparações: —';
+  root = null; render();
+  setLog('Árvore limpa.');
+  document.getElementById('chip-n').textContent = 'nós: 0';
+  document.getElementById('chip-h').textContent = 'altura: −1';
+  document.getElementById('chip-cmp').textContent = 'comparações: —';
 }
 
-function log(msg){ document.getElementById('log').textContent=msg; }
+function setLog(msg){ document.getElementById('log').textContent = msg; }
 
-/* ── Árvore de exemplo ──────────────────────────────────────────── */
-[40,20,60,10,30,50,70].forEach(v=>{ root=insert(root,v); });
+/* tecla Enter no input */
+document.getElementById('val').addEventListener('keydown', e => {
+  if(e.key === 'Enter') doInsert();
+});
+
+/* árvore de exemplo */
+[40,20,60,10,30,50,70].forEach(v => { root = insert(root, v); });
 render();
-log('Árvore de exemplo carregada. Insira ou busque um valor.');
-document.getElementById('chip-n').textContent=`nós: ${count(root)}`;
-document.getElementById('chip-h').textContent=`altura: ${height(root)}`;
+setLog('Árvore de exemplo carregada. Insira ou busque um valor.');
+document.getElementById('chip-n').textContent = `nós: ${treeCount(root)}`;
+document.getElementById('chip-h').textContent = `altura: ${treeHeight(root)}`;
 </script>
+</body>
+</html>
