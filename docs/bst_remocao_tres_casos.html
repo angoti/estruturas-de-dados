@@ -5,10 +5,8 @@
 .btn.active{background:#1D9E75;color:#fff;border-color:#1D9E75}
 .panel{background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:8px;padding:10px 14px}
 .label{font-size:11px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
-.caso-badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:12px;margin-bottom:6px}
 </style>
 
-<!-- tabs dos casos -->
 <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
   <button class="btn active" onclick="setCase(0,this)">Caso 1 — Folha</button>
   <button class="btn" onclick="setCase(1,this)">Caso 2 — Um filho</button>
@@ -16,6 +14,11 @@
 </div>
 
 <svg id="svg-bst" width="100%" viewBox="0 0 680 240" style="display:block;margin-bottom:10px">
+  <defs>
+    <marker id="arm" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
   <g id="g-edges"></g>
   <g id="g-nodes"></g>
 </svg>
@@ -46,183 +49,177 @@
 <script>
 const NS = 'http://www.w3.org/2000/svg';
 
-// ── paleta ──────────────────────────────────────────────────────
+/* ── cores hardcoded para funcionar fora do claude.ai ── */
 const C = {
   normal:  {f:'#E1F5EE', s:'#1D9E75', t:'#085041'},
   cur:     {f:'#FAEEDA', s:'#BA7517', t:'#633806'},
   visited: {f:'#EEEDFE', s:'#534AB7', t:'#3C3489'},
   remove:  {f:'#FCEBEB', s:'#A32D2D', t:'#791F1F'},
   succ:    {f:'#EAF3DE', s:'#3B6D11', t:'#27500A'},
-  ghost:   {f:'#F1EFE8', s:'#D3D1C7', t:'#888780'},
 };
+const EDGE_COLOR  = '#9ca3af';   /* cinza fixo para arestas normais */
+const EDGE_DEL    = '#A32D2D';   /* vermelho para aresta que será removida */
+const EDGE_NEW    = '#1D9E75';   /* verde para nova aresta */
 
-function svgEl(tag,attrs){
-  const e=document.createElementNS(NS,tag);
-  for(const[k,v]of Object.entries(attrs))e.setAttribute(k,v);
+function svgEl(tag, attrs){
+  const e = document.createElementNS(NS, tag);
+  for(const [k,v] of Object.entries(attrs)) e.setAttribute(k,v);
   return e;
 }
 
-function drawNode(g, cx, cy, val, color, r=24, dashed=false){
-  const c=svgEl('circle',{cx,cy,r,fill:color.f,stroke:color.s,'stroke-width':'1.8'});
-  if(dashed)c.setAttribute('stroke-dasharray','5 3');
+function edge(g, x1, y1, x2, y2, r1=24, r2=24, color=EDGE_COLOR, dashed=false){
+  /* calcula pontos de parada na borda dos círculos */
+  const dx=x2-x1, dy=y2-y1, dist=Math.sqrt(dx*dx+dy*dy);
+  const sx=dx/dist, sy=dy/dist;
+  const l=svgEl('line',{
+    x1:x1+sx*r1, y1:y1+sy*r1,
+    x2:x2-sx*r2, y2:y2-sy*r2,
+    stroke:color,'stroke-width':'1.8'
+  });
+  if(dashed) l.setAttribute('stroke-dasharray','5 3');
+  g.appendChild(l);
+}
+
+function node(g, cx, cy, val, color, r=24){
+  const c=svgEl('circle',{cx,cy,r,fill:color.f,stroke:color.s,'stroke-width':'2'});
   const t=svgEl('text',{x:cx,y:cy,'text-anchor':'middle','dominant-baseline':'central',
-    'font-size':r>18?'13':'11','font-weight':'500',fill:color.t,'font-family':'var(--font-mono)'});
+    'font-size':r>=22?'14':'12','font-weight':'500',fill:color.t,
+    'font-family':"'IBM Plex Mono',monospace"});
   t.textContent=val;
-  g.appendChild(c);g.appendChild(t);
+  g.appendChild(c); g.appendChild(t);
 }
 
-function drawEdge(g,x1,y1,x2,y2,dashed=false,color='var(--color-text-tertiary)'){
-  const l=svgEl('line',{x1,y1:y1,x2,y2:y2,stroke:color,'stroke-width':'1.5'});
-  if(dashed)l.setAttribute('stroke-dasharray','5 3');
-  g.appendChild(l);
-}
-
-function drawArrow(g,x1,y1,x2,y2,color='#BA7517'){
-  const l=svgEl('line',{x1,y1,x2,y2,stroke:color,'stroke-width':'1.5','marker-end':'url(#arrow-m)'});
-  g.appendChild(l);
-}
-
-// ── CASOS ───────────────────────────────────────────────────────
+/* ── definições dos três casos ── */
 const CASES = [
 
-  // ── CASO 1: folha ──────────────────────────────────────────────
+  /* CASO 1 — folha */
   { steps:[
-    { explain:'Árvore inicial. Queremos remover 3 (folha — sem filhos).',
-      acao:'Identificar nó alvo: 3',
-      inorder:'3 5 7 10 12 15 20',
+    { acao:'Identificar nó alvo: 3',
+      inorder:'3  5  7  10  12  15  20',
+      explain:'Árvore inicial. Queremos remover o nó 3, que é folha (sem filhos). Localizado como filho esquerdo do nó 5.',
       draw(gE,gN){
-        drawEdge(gE,340,52,200,122); drawEdge(gE,340,52,480,122);
-        drawEdge(gE,200,142,130,202); drawEdge(gE,200,142,270,202);
-        drawEdge(gE,480,142,410,202); drawEdge(gE,480,142,550,202);
-        drawNode(gN,340,36,10,C.normal); drawNode(gN,200,126,5,C.normal);
-        drawNode(gN,480,126,15,C.normal);
-        drawNode(gN,130,206,3,C.cur);   // alvo
-        drawNode(gN,270,206,7,C.normal); drawNode(gN,410,206,12,C.normal); drawNode(gN,550,206,20,C.normal);
+        edge(gE,340,36,200,126); edge(gE,340,36,480,126);
+        edge(gE,200,126,130,206); edge(gE,200,126,270,206);
+        edge(gE,480,126,410,206); edge(gE,480,126,550,206);
+        node(gN,340,36,10,C.normal);
+        node(gN,200,126,5,C.normal); node(gN,480,126,15,C.normal);
+        node(gN,130,206,3,C.normal);   /* ainda normal no passo inicial */
+        node(gN,270,206,7,C.normal); node(gN,410,206,12,C.normal); node(gN,550,206,20,C.normal);
       }},
-    { explain:'Nó 3 é folha (esq=null, dir=null). Basta atualizar o ponteiro do pai (5) para null. Nenhum filho para reposicionar.',
-      acao:'nó.esquerdo = null → pai(5).esquerdo = null',
-      inorder:'3 5 7 10 12 15 20',
+    { acao:'nó 3 é folha → pai(5).esquerdo = null',
+      inorder:'3  5  7  10  12  15  20',
+      explain:'Nó 3 identificado como alvo (âmbar). É folha — sem filhos. Basta atualizar pai(5).esquerdo = null. Nenhum filho para reposicionar.',
       draw(gE,gN){
-        drawEdge(gE,340,52,200,122); drawEdge(gE,340,52,480,122);
-        drawEdge(gE,200,142,270,202); drawEdge(gE,480,142,410,202); drawEdge(gE,480,142,550,202);
-        // aresta para 3 tracejada (vai sumir)
-        drawEdge(gE,200,142,130,202,true,'#A32D2D');
-        drawNode(gN,340,36,10,C.normal); drawNode(gN,200,126,5,C.visited);
-        drawNode(gN,480,126,15,C.normal);
-        drawNode(gN,130,206,3,C.remove);  // marcado para remoção
-        drawNode(gN,270,206,7,C.normal); drawNode(gN,410,206,12,C.normal); drawNode(gN,550,206,20,C.normal);
+        edge(gE,340,36,200,126); edge(gE,340,36,480,126);
+        edge(gE,200,126,130,206,24,24,EDGE_DEL,true); /* aresta deletada */
+        edge(gE,200,126,270,206);
+        edge(gE,480,126,410,206); edge(gE,480,126,550,206);
+        node(gN,340,36,10,C.normal);
+        node(gN,200,126,5,C.visited); node(gN,480,126,15,C.normal);
+        node(gN,130,206,3,C.cur);     /* alvo destacado */
+        node(gN,270,206,7,C.normal); node(gN,410,206,12,C.normal); node(gN,550,206,20,C.normal);
       }},
-    { explain:'Nó 3 removido. A BST permanece válida: in-order = [5,7,10,12,15,20]. O pai (5) agora aponta para null à esquerda.',
-      acao:'Remoção concluída ✓',
-      inorder:'5 7 10 12 15 20',
+    { acao:'Remoção concluída ✓',
+      inorder:'5  7  10  12  15  20',
+      explain:'Nó 3 removido. Pai(5) agora aponta para null à esquerda. BST válida — in-order: [5, 7, 10, 12, 15, 20].',
       draw(gE,gN){
-        drawEdge(gE,340,52,200,122); drawEdge(gE,340,52,480,122);
-        drawEdge(gE,200,142,270,202); drawEdge(gE,480,142,410,202); drawEdge(gE,480,142,550,202);
-        drawNode(gN,340,36,10,C.normal); drawNode(gN,200,126,5,C.succ);
-        drawNode(gN,480,126,15,C.normal);
-        drawNode(gN,270,206,7,C.normal); drawNode(gN,410,206,12,C.normal); drawNode(gN,550,206,20,C.normal);
+        edge(gE,340,36,200,126); edge(gE,340,36,480,126);
+        edge(gE,200,126,270,206);
+        edge(gE,480,126,410,206); edge(gE,480,126,550,206);
+        node(gN,340,36,10,C.normal);
+        node(gN,200,126,5,C.succ); node(gN,480,126,15,C.normal);
+        node(gN,270,206,7,C.normal); node(gN,410,206,12,C.normal); node(gN,550,206,20,C.normal);
       }},
   ]},
 
-  // ── CASO 2: um filho ───────────────────────────────────────────
+  /* CASO 2 — um filho */
   { steps:[
-    { explain:'Árvore inicial. Queremos remover 15 (tem apenas um filho: 12 à esquerda, 20 à direita).\nNeste exemplo removemos um nó que tem apenas filho esquerdo: removemos 20 que tem só filho esquerdo (18).',
-      acao:'Identificar nó alvo',
-      inorder:'3 5 7 10 12 15 18 20',
+    { acao:'Identificar nó alvo: 15',
+      inorder:'3  5  7  10  12  15  20',
+      explain:'Árvore com nó 15 tendo apenas filho esquerdo (12). Vamos remover 15.',
       draw(gE,gN){
-        drawEdge(gE,340,52,200,122); drawEdge(gE,340,52,480,122);
-        drawEdge(gE,200,142,130,202); drawEdge(gE,200,142,270,202);
-        drawEdge(gE,480,142,410,202); drawEdge(gE,480,142,560,202);
-        drawEdge(gE,560,222,520,222+55);
-        drawNode(gN,340,36,10,C.normal); drawNode(gN,200,126,5,C.normal);
-        drawNode(gN,480,126,15,C.normal);
-        drawNode(gN,130,206,3,C.normal); drawNode(gN,270,206,7,C.normal);
-        drawNode(gN,410,206,12,C.normal);
-        drawNode(gN,560,206,20,C.cur);   // alvo
-        drawNode(gN,520,232,18,C.normal,20);
+        edge(gE,340,36,200,126); edge(gE,340,36,480,126);
+        edge(gE,200,126,130,206); edge(gE,200,126,270,206);
+        edge(gE,480,126,410,206);
+        node(gN,340,36,10,C.normal);
+        node(gN,200,126,5,C.normal); node(gN,480,126,15,C.normal);
+        node(gN,130,206,3,C.normal); node(gN,270,206,7,C.normal);
+        node(gN,410,206,12,C.normal);
       }},
-    { explain:'Nó 20 tem apenas um filho esquerdo (18). Substituímos 20 pelo seu único filho: o pai (15) passa a apontar diretamente para 18.',
-      acao:'pai(15).direito = filho_unico(18)',
-      inorder:'3 5 7 10 12 15 18 20',
+    { acao:'15 tem só filho esq → pai(10).dir = filho(12)',
+      inorder:'3  5  7  10  12  15  20',
+      explain:'Nó 15 tem apenas filho esquerdo (12). Substituímos 15 pelo seu único filho: pai(10).direito passa a apontar para 12.',
       draw(gE,gN){
-        drawEdge(gE,340,52,200,122); drawEdge(gE,340,52,480,122);
-        drawEdge(gE,200,142,130,202); drawEdge(gE,200,142,270,202);
-        drawEdge(gE,480,142,410,202);
-        drawEdge(gE,480,142,560,202,true,'#A32D2D'); // aresta velha tracejada
-        drawEdge(gE,480,142,520,202,false,'#1D9E75'); // nova aresta direta
-        drawNode(gN,340,36,10,C.normal); drawNode(gN,200,126,5,C.normal);
-        drawNode(gN,480,126,15,C.visited);
-        drawNode(gN,130,206,3,C.normal); drawNode(gN,270,206,7,C.normal);
-        drawNode(gN,410,206,12,C.normal);
-        drawNode(gN,560,206,20,C.remove);
-        drawNode(gN,520,206,18,C.succ,22);
+        edge(gE,340,36,200,126);
+        edge(gE,340,36,480,126,24,24,EDGE_DEL,true); /* velha aresta */
+        edge(gE,340,36,410,206,24,24,EDGE_NEW);       /* nova aresta direta */
+        edge(gE,200,126,130,206); edge(gE,200,126,270,206);
+        node(gN,340,36,10,C.visited);
+        node(gN,200,126,5,C.normal); node(gN,480,126,15,C.remove);
+        node(gN,130,206,3,C.normal); node(gN,270,206,7,C.normal);
+        node(gN,410,206,12,C.succ);
       }},
-    { explain:'Nó 20 removido. O filho 18 sobe para ocupar o lugar. BST válida: in-order = [3,5,7,10,12,15,18]. Propriedade preservada.',
-      acao:'Remoção concluída ✓',
-      inorder:'3 5 7 10 12 15 18',
+    { acao:'Remoção concluída ✓',
+      inorder:'3  5  7  10  12',
+      explain:'Nó 15 removido. O filho 12 sobe para o lugar. BST válida — in-order: [3, 5, 7, 10, 12].',
       draw(gE,gN){
-        drawEdge(gE,340,52,200,122); drawEdge(gE,340,52,480,122);
-        drawEdge(gE,200,142,130,202); drawEdge(gE,200,142,270,202);
-        drawEdge(gE,480,142,410,202); drawEdge(gE,480,142,530,202);
-        drawNode(gN,340,36,10,C.normal); drawNode(gN,200,126,5,C.normal);
-        drawNode(gN,480,126,15,C.succ);
-        drawNode(gN,130,206,3,C.normal); drawNode(gN,270,206,7,C.normal);
-        drawNode(gN,410,206,12,C.normal);
-        drawNode(gN,530,206,18,C.succ,22);
+        edge(gE,340,36,200,126); edge(gE,340,36,420,136,24,22);
+        edge(gE,200,126,130,206); edge(gE,200,126,270,206);
+        node(gN,340,36,10,C.succ);
+        node(gN,200,126,5,C.normal); node(gN,420,140,12,C.succ,22);
+        node(gN,130,206,3,C.normal); node(gN,270,206,7,C.normal);
       }},
   ]},
 
-  // ── CASO 3: dois filhos ────────────────────────────────────────
+  /* CASO 3 — dois filhos */
   { steps:[
-    { explain:'Árvore inicial. Queremos remover 10 (raiz) — tem dois filhos (5 e 15). Precisamos encontrar o SUCESSOR IN-ORDER: menor elemento da subárvore direita.',
-      acao:'Identificar nó alvo: 10',
-      inorder:'3 5 7 10 12 15 20',
+    { acao:'Identificar nó alvo: 10 (dois filhos)',
+      inorder:'3  5  7  10  12  15  20',
+      explain:'Queremos remover a raiz (10), que tem dois filhos (5 e 15). Precisamos do SUCESSOR IN-ORDER = menor da subárvore direita.',
       draw(gE,gN){
-        drawEdge(gE,340,52,200,122); drawEdge(gE,340,52,480,122);
-        drawEdge(gE,200,142,130,202); drawEdge(gE,200,142,270,202);
-        drawEdge(gE,480,142,410,202); drawEdge(gE,480,142,550,202);
-        drawNode(gN,340,36,10,C.cur);  // alvo
-        drawNode(gN,200,126,5,C.normal); drawNode(gN,480,126,15,C.normal);
-        drawNode(gN,130,206,3,C.normal); drawNode(gN,270,206,7,C.normal);
-        drawNode(gN,410,206,12,C.normal); drawNode(gN,550,206,20,C.normal);
+        edge(gE,340,36,200,126); edge(gE,340,36,480,126);
+        edge(gE,200,126,130,206); edge(gE,200,126,270,206);
+        edge(gE,480,126,410,206); edge(gE,480,126,550,206);
+        node(gN,340,36,10,C.normal);
+        node(gN,200,126,5,C.normal); node(gN,480,126,15,C.normal);
+        node(gN,130,206,3,C.normal); node(gN,270,206,7,C.normal);
+        node(gN,410,206,12,C.normal); node(gN,550,206,20,C.normal);
       }},
-    { explain:'Sucessor in-order = menor da subárvore direita = nó mais à esquerda de {15,12,20} = 12. Ele é o menor valor maior que 10.',
-      acao:'Sucessor in-order de 10 = 12',
-      inorder:'3 5 7 10 12 15 20',
+    { acao:'Localiza sucessor in-order = mínimo da subárvore dir = 12',
+      inorder:'3  5  7  10  12  15  20',
+      explain:'Desce pela esquerda da subárvore direita {15,12,20}: o mais à esquerda é 12. Ele é o menor valor maior que 10 — o sucessor.',
       draw(gE,gN){
-        drawEdge(gE,340,52,200,122); drawEdge(gE,340,52,480,122);
-        drawEdge(gE,200,142,130,202); drawEdge(gE,200,142,270,202);
-        drawEdge(gE,480,142,410,202); drawEdge(gE,480,142,550,202);
-        drawNode(gN,340,36,10,C.remove);
-        drawNode(gN,200,126,5,C.normal); drawNode(gN,480,126,15,C.visited);
-        drawNode(gN,130,206,3,C.normal); drawNode(gN,270,206,7,C.normal);
-        drawNode(gN,410,206,12,C.succ);  // sucessor encontrado
-        drawNode(gN,550,206,20,C.normal);
+        edge(gE,340,36,200,126); edge(gE,340,36,480,126);
+        edge(gE,200,126,130,206); edge(gE,200,126,270,206);
+        edge(gE,480,126,410,206); edge(gE,480,126,550,206);
+        node(gN,340,36,10,C.remove);
+        node(gN,200,126,5,C.normal); node(gN,480,126,15,C.visited);
+        node(gN,130,206,3,C.normal); node(gN,270,206,7,C.normal);
+        node(gN,410,206,12,C.succ); node(gN,550,206,20,C.normal);
       }},
-    { explain:'Copiamos o valor 12 para o nó que seria removido (10). Agora temos 12 duplicado. O próximo passo é remover o 12 original da subárvore direita.',
-      acao:'nó.dado = sucessor.dado → nó vira 12',
-      inorder:'3 5 7 10 12 15 20',
+    { acao:'Copia dado do sucessor → nó vira 12',
+      inorder:'3  5  7  10  12  15  20',
+      explain:'Copiamos o valor 12 para o nó raiz (onde estava 10). Agora 12 aparece duas vezes — o próximo passo remove o 12 original da subárvore direita.',
       draw(gE,gN){
-        drawEdge(gE,340,52,200,122); drawEdge(gE,340,52,480,122);
-        drawEdge(gE,200,142,130,202); drawEdge(gE,200,142,270,202);
-        drawEdge(gE,480,142,410,202); drawEdge(gE,480,142,550,202);
-        drawNode(gN,340,36,12,C.cur);  // valor copiado
-        drawNode(gN,200,126,5,C.normal); drawNode(gN,480,126,15,C.visited);
-        drawNode(gN,130,206,3,C.normal); drawNode(gN,270,206,7,C.normal);
-        drawNode(gN,410,206,12,C.remove); // este será removido (caso 1 — folha)
-        drawNode(gN,550,206,20,C.normal);
+        edge(gE,340,36,200,126); edge(gE,340,36,480,126);
+        edge(gE,200,126,130,206); edge(gE,200,126,270,206);
+        edge(gE,480,126,410,206); edge(gE,480,126,550,206);
+        node(gN,340,36,12,C.cur);
+        node(gN,200,126,5,C.normal); node(gN,480,126,15,C.visited);
+        node(gN,130,206,3,C.normal); node(gN,270,206,7,C.normal);
+        node(gN,410,206,12,C.remove); node(gN,550,206,20,C.normal);
       }},
-    { explain:'O sucessor (12) é folha — Caso 1. Remove diretamente: pai(15).esquerdo = null. BST válida: in-order = [3,5,7,12,15,20]. Propriedade preservada!',
-      acao:'Remove sucessor (folha) → Remoção concluída ✓',
-      inorder:'3 5 7 12 15 20',
+    { acao:'Remove sucessor (folha) → Remoção concluída ✓',
+      inorder:'3  5  7  12  15  20',
+      explain:'O sucessor 12 é folha — aplica Caso 1. pai(15).esquerdo = null. BST válida — in-order: [3,5,7,12,15,20].',
       draw(gE,gN){
-        drawEdge(gE,340,52,200,122); drawEdge(gE,340,52,480,122);
-        drawEdge(gE,200,142,130,202); drawEdge(gE,200,142,270,202);
-        drawEdge(gE,480,142,550,202);
-        drawNode(gN,340,36,12,C.succ); // raiz agora é 12
-        drawNode(gN,200,126,5,C.normal); drawNode(gN,480,126,15,C.succ);
-        drawNode(gN,130,206,3,C.normal); drawNode(gN,270,206,7,C.normal);
-        drawNode(gN,550,206,20,C.normal);
+        edge(gE,340,36,200,126); edge(gE,340,36,480,126);
+        edge(gE,200,126,130,206); edge(gE,200,126,270,206);
+        edge(gE,480,126,550,206);
+        node(gN,340,36,12,C.succ);
+        node(gN,200,126,5,C.normal); node(gN,480,126,15,C.succ);
+        node(gN,130,206,3,C.normal); node(gN,270,206,7,C.normal);
+        node(gN,550,206,20,C.normal);
       }},
   ]},
 ];
@@ -235,31 +232,18 @@ function applyStep(i){
   const gN=document.getElementById('g-nodes');
   gE.innerHTML=''; gN.innerHTML='';
 
-  // defs para seta
-  let defs=document.querySelector('#svg-bst defs');
-  if(!defs){
-    defs=document.createElementNS(NS,'defs');
-    const m=document.createElementNS(NS,'marker');
-    m.setAttribute('id','arrow-m');m.setAttribute('viewBox','0 0 10 10');
-    m.setAttribute('refX','8');m.setAttribute('refY','5');
-    m.setAttribute('markerWidth','6');m.setAttribute('markerHeight','6');
-    m.setAttribute('orient','auto-start-reverse');
-    const p=document.createElementNS(NS,'path');
-    p.setAttribute('d','M2 1L8 5L2 9');p.setAttribute('fill','none');
-    p.setAttribute('stroke','context-stroke');p.setAttribute('stroke-width','1.5');
-    m.appendChild(p);defs.appendChild(m);
-    document.getElementById('svg-bst').prepend(defs);
-  }
-
   if(i<0){
-    // desenha estado inicial
-    steps[0].draw(gE,gN);
+    /* estado inicial: desenha primeiro frame sem destacar nenhum alvo */
+    const s0=steps[0];
+    /* chama draw mas sobrescreve: todos os nós em C.normal */
+    s0.draw(gE,gN);
     document.getElementById('explain').textContent='Clique em Próximo para iniciar.';
     document.getElementById('acao').textContent='—';
-    document.getElementById('inorder').textContent=steps[0].inorder;
+    document.getElementById('inorder').textContent=s0.inorder;
     document.getElementById('counter').textContent=`Passo 0 de ${steps.length}`;
     return;
   }
+
   const s=steps[i];
   s.draw(gE,gN);
   document.getElementById('explain').textContent=s.explain;
