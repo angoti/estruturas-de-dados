@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Queue;
 
 public class ArvoreBinaria<T> {
-  protected No<T> raiz;
+  public No<T> raiz;
 
   public ArvoreBinaria() {
     this.raiz = null;
@@ -110,4 +110,5 @@ public class ArvoreBinaria<T> {
   public boolean estaVazia() {
     return raiz == null;
   }
+
 }

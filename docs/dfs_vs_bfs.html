@@ -1,0 +1,147 @@
+
+<style>
+.btn{padding:6px 16px;border-radius:6px;border:1px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);font-size:13px;cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--color-background-tertiary)}
+.btn.active{background:#1D9E75;color:#fff;border-color:#1D9E75}
+.panel{background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:8px;padding:10px 14px}
+.mono{font-family:var(--font-mono);font-size:13px}
+.label{font-size:11px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+</style>
+
+<div style="display:flex;gap:8px;margin-bottom:12px">
+  <button class="btn active" onclick="setMode('dfs',this)">DFS — profundidade</button>
+  <button class="btn" onclick="setMode('bfs',this)">BFS — largura</button>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+  <div class="panel">
+    <div class="label">Estrutura usada</div>
+    <div class="mono" id="estrutura">Pilha (recursão / stack explícita)</div>
+  </div>
+  <div class="panel">
+    <div class="label">Ordem de visita</div>
+    <div class="mono" id="ordem" style="color:#1D9E75">—</div>
+  </div>
+</div>
+
+<svg width="100%" viewBox="0 0 680 240" style="display:block;margin-bottom:10px">
+  <!-- arestas -->
+  <line x1="340" y1="46" x2="210" y2="116" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
+  <line x1="340" y1="46" x2="470" y2="116" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
+  <line x1="210" y1="136" x2="145" y2="196" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
+  <line x1="210" y1="136" x2="275" y2="196" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
+  <line x1="470" y1="136" x2="405" y2="196" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
+  <line x1="470" y1="136" x2="535" y2="196" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
+  <!-- nós com números de visita -->
+  <g id="n10"><circle cx="340" cy="36"  r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text id="t10" x="340" y="36"  text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">10</text></g>
+  <g id="n5" ><circle cx="210" cy="126" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text id="t5"  x="210" y="126" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">5</text></g>
+  <g id="n15"><circle cx="470" cy="126" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text id="t15" x="470" y="126" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">15</text></g>
+  <g id="n3" ><circle cx="145" cy="206" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text id="t3"  x="145" y="206" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">3</text></g>
+  <g id="n7" ><circle cx="275" cy="206" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text id="t7"  x="275" y="206" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">7</text></g>
+  <g id="n12"><circle cx="405" cy="206" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text id="t12" x="405" y="206" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">12</text></g>
+  <g id="n20"><circle cx="535" cy="206" r="26" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text id="t20" x="535" y="206" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041" font-family="var(--font-mono)">20</text></g>
+</svg>
+
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+  <button class="btn" onclick="prev()">← Anterior</button>
+  <button class="btn" onclick="next()">Próximo →</button>
+  <button class="btn" onclick="reset()">↺ Reiniciar</button>
+  <span id="counter" style="font-size:12px;color:var(--color-text-secondary);margin-left:4px"></span>
+</div>
+
+<div class="panel">
+  <div class="label">O que está acontecendo</div>
+  <div id="explain" style="font-size:13px;color:var(--color-text-primary);line-height:1.6;min-height:40px">Clique em Próximo para iniciar.</div>
+</div>
+
+<script>
+const nodes = ['n10','n5','n15','n3','n7','n12','n20'];
+
+const modes = {
+  dfs: {
+    estrutura: 'Pilha — recursão (call stack da JVM)',
+    ordem: '10 → 5 → 3 → 7 → 15 → 12 → 20',
+    steps: [
+      { node:'n10', explain:'Começa na raiz (10). DFS mergulha imediatamente para o filho esquerdo — não visita o direito ainda.' },
+      { node:'n5',  explain:'Desce para 5 (filho esquerdo de 10). Continua mergulhando para a esquerda.' },
+      { node:'n3',  explain:'Desce para 3 (filho esquerdo de 5). É uma folha — sem filhos. Visita 3 e começa a voltar (backtrack).' },
+      { node:'n7',  explain:'Backtrack para 5. Filho esquerdo (3) já visitado → explora o direito. Desce para 7. Folha → visita 7 e volta.' },
+      { node:'n15', explain:'Backtrack até 10. Subárvore esquerda concluída → explora o direito. Desce para 15.' },
+      { node:'n12', explain:'Desce para 12 (filho esquerdo de 15). Folha → visita 12 e volta.' },
+      { node:'n20', explain:'Backtrack para 15. Filho esquerdo visitado → explora o direito. Desce para 20. Folha → visita 20. DFS concluído.' },
+    ]
+  },
+  bfs: {
+    estrutura: 'Fila (Queue) — explícita, sem recursão',
+    ordem: '10 → 5 → 15 → 3 → 7 → 12 → 20',
+    steps: [
+      { node:'n10', explain:'Começa na raiz (10). BFS não mergulha — enfileira os filhos e visita nível por nível. Fila: [5, 15].' },
+      { node:'n5',  explain:'Remove 5 da fila, visita. Enfileira seus filhos. Fila: [15, 3, 7].' },
+      { node:'n15', explain:'Remove 15 da fila, visita. Enfileira seus filhos. Fila: [3, 7, 12, 20].' },
+      { node:'n3',  explain:'Remove 3 da fila, visita. Folha — sem filhos. Fila: [7, 12, 20].' },
+      { node:'n7',  explain:'Remove 7 da fila, visita. Folha — sem filhos. Fila: [12, 20].' },
+      { node:'n12', explain:'Remove 12 da fila, visita. Folha — sem filhos. Fila: [20].' },
+      { node:'n20', explain:'Remove 20 da fila, visita. Folha — sem filhos. Fila: []. BFS concluído.' },
+    ]
+  }
+};
+
+let mode = 'dfs';
+let idx = -1;
+let timer = null;
+
+function circle(id){ return document.getElementById(id).querySelector('circle'); }
+function label(id) { return document.getElementById(id).querySelector('text'); }
+
+function resetColors(){
+  nodes.forEach(id=>{
+    circle(id).setAttribute('fill','#E1F5EE');
+    circle(id).setAttribute('stroke','#1D9E75');
+    label(id).setAttribute('fill','#085041');
+  });
+}
+
+function applyStep(i){
+  resetColors();
+  const m = modes[mode];
+  if(i < 0){
+    document.getElementById('explain').textContent = 'Clique em Próximo para iniciar.';
+    document.getElementById('counter').textContent = `Passo 0 de ${m.steps.length}`;
+    document.getElementById('ordem').textContent = '—';
+    return;
+  }
+  const visited = m.steps.slice(0, i).map(s=>s.node);
+  visited.forEach(id=>{
+    circle(id).setAttribute('fill','#EEEDFE');
+    circle(id).setAttribute('stroke','#534AB7');
+    label(id).setAttribute('fill','#3C3489');
+  });
+  const cur = m.steps[i].node;
+  circle(cur).setAttribute('fill','#FAEEDA');
+  circle(cur).setAttribute('stroke','#BA7517');
+  label(cur).setAttribute('fill','#633806');
+
+  document.getElementById('explain').textContent = m.steps[i].explain;
+  document.getElementById('counter').textContent = `Passo ${i+1} de ${m.steps.length}`;
+  const seq = m.steps.slice(0,i+1).map(s=>{
+    const v = document.getElementById(s.node).querySelector('text').textContent;
+    return v;
+  });
+  document.getElementById('ordem').textContent = seq.join(' → ');
+}
+
+function next(){ if(idx < modes[mode].steps.length-1){ idx++; applyStep(idx); } }
+function prev(){ if(idx > -1){ idx--; applyStep(idx); } }
+function reset(){ if(timer)clearTimeout(timer); idx=-1; applyStep(-1); }
+
+function setMode(m, el){
+  mode=m; idx=-1;
+  document.querySelectorAll('.btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('estrutura').textContent = modes[m].estrutura;
+  applyStep(-1);
+}
+
+document.getElementById('estrutura').textContent = modes['dfs'].estrutura;
+applyStep(-1);
+</script>

@@ -18,5 +18,8 @@
   "java.configuration.updateBuildConfiguration": "automatic",
   "java.debug.settings.onBuildFailureProceed": true,
   "docwriter.progress.trackFunctions": false,
-  "docwriter.progress.trackMethods": false
+  "docwriter.progress.trackMethods": false,
+  "java.debug.settings.showStaticVariables": true,
+  "java.debug.settings.showLogicalStructure": true,
+  "java.debug.settings.showQualifiedNames": false
 }
