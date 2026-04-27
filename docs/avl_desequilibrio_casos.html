@@ -1,221 +1,369 @@
-
 <style>
-.tab-row { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
-.tab { padding:5px 16px; font-size:13px; font-weight:500; border-radius:20px; cursor:pointer; border:0.5px solid var(--color-border-secondary); background:var(--color-background-primary); color:var(--color-text-secondary); transition:all .15s; }
-.tab.on { background:var(--color-background-primary); color:var(--color-text-primary); border-color:var(--color-border-primary); box-shadow:0 0 0 1px var(--color-border-primary); }
-.tab:hover:not(.on) { background:var(--color-background-secondary); }
-.desc-block { font-size:13px; line-height:1.6; color:var(--color-text-secondary); margin-bottom:16px; }
-.desc-block strong { color:var(--color-text-primary); font-weight:500; }
-.legend { display:flex; gap:16px; margin-top:12px; font-size:12px; color:var(--color-text-secondary); }
-.leg-dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:4px; vertical-align:middle; }
+  :root {
+    --color-text-primary: #1a1a1a;
+    --color-text-secondary: #6b6b6b;
+    --color-text-tertiary: #9b9b9b;
+
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f5f5;
+    --color-background-tertiary: #ebebeb;
+
+    --color-border-primary: rgba(0, 0, 0, 0.4);
+    --color-border-secondary: rgba(0, 0, 0, 0.3);
+    --color-border-tertiary: rgba(0, 0, 0, 0.15);
+
+    --font-sans: system-ui, sans-serif;
+    --font-mono: ui-monospace, monospace;
+
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-text-primary: #f0f0f0;
+      --color-text-secondary: #a0a0a0;
+      --color-text-tertiary: #6b6b6b;
+
+      --color-background-primary: #1a1a1a;
+      --color-background-secondary: #242424;
+      --color-background-tertiary: #2e2e2e;
+
+      --color-border-primary: rgba(255, 255, 255, 0.4);
+      --color-border-secondary: rgba(255, 255, 255, 0.3);
+      --color-border-tertiary: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  .tab-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .tab {
+    font-family: var(--font-sans);
+    padding: 5px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 20px;
+    cursor: pointer;
+    border: 1px solid var(--color-border-secondary);
+    background: var(--color-background-primary);
+    color: var(--color-text-secondary);
+    transition: all 0.15s;
+    line-height: 1.5;
+  }
+  .tab.on {
+    color: var(--color-text-primary);
+    border-color: var(--color-border-primary);
+    box-shadow: 0 0 0 1.5px var(--color-border-primary);
+    font-weight: bold;
+  }
+  .tab:hover:not(.on) {
+    background: var(--color-background-secondary);
+  }
+  .desc-titulo {
+    font-size: 15px;
+    font-weight: 500;
+    color: black;
+    /* color: black; */
+    margin-bottom: 4px;
+  }
+  .desc-corpo {
+    font-size: 15px;
+    line-height: 1.55;
+    color: gray;
+    margin-bottom: 14px;
+  }
+  .desc-corpo strong {
+    color: gray;
+    font-weight: 900;
+  }
+  .legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 20px;
+    font-size: 14px;
+    color: gray;
+    flex-wrap: wrap;
+  }
+  .leg-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
 </style>
 
-<div class="tab-row" id="tabs">
-  <button class="tab on" onclick="show('LL',this)">Caso LL</button>
-  <button class="tab" onclick="show('RR',this)">Caso RR</button>
-  <button class="tab" onclick="show('LR',this)">Caso LR</button>
-  <button class="tab" onclick="show('RL',this)">Caso RL</button>
+<div class="tab-row">
+  <button class="tab on" onclick="show('LL', this)">Caso LL</button>
+  <button class="tab" onclick="show('RR', this)">Caso RR</button>
+  <button class="tab" onclick="show('LR', this)">Caso LR</button>
+  <button class="tab" onclick="show('RL', this)">Caso RL</button>
 </div>
 
-<div class="desc-block" id="desc"></div>
+<div class="desc-titulo" id="dtitulo"></div>
+<div class="desc-corpo" id="dcorpo"></div>
 
-<svg id="sv" width="100%" viewBox="0 0 680 310" style="overflow:visible"></svg>
+<svg id="sv" width="100%" style="border-width:1px; border-color:#e0e0e0; border-style: solid;" viewBox="0 0 660 250"></svg>
 
 <div class="legend">
-  <span><span class="leg-dot" style="background:#F09595;border:1px solid #A32D2D"></span>fator ±2 (desequilíbrio)</span>
-  <span><span class="leg-dot" style="background:#EF9F27;border:1px solid #854F0B"></span>fator ±1 (atenção)</span>
-  <span><span class="leg-dot" style="background:#97C459;border:1px solid #3B6D11"></span>fator 0 (balanceado)</span>
+  <span>
+    <span class="leg-dot" style="background: #fcebeb; border: 1px solid #a32d2d"></span>
+    fator ±2 — desequilíbrio
+  </span>
+  <span>
+    <span class="leg-dot" style="background: #faeeda; border: 1px solid #854f0b"></span>
+    fator ±1 — atenção
+  </span>
+  <span>
+    <span class="leg-dot" style="background: #eaf3de; border: 1px solid #3b6d11"></span>
+    fator 0 — balanceado
+  </span>
 </div>
 
 <script>
-const CASOS = {
-  LL:{
-    label:'Caso LL — Rotação simples à direita',
-    desc:'O nó <strong>A</strong> tem fator +2 e o filho esquerdo <strong>B</strong> tem fator +1 (ou 0). Desequilíbrio à <strong>esquerda da subárvore esquerda</strong>. Solução: uma rotação simples à direita em A — B sobe, A desce como filho direito de B.',
-    rot:'rotação à direita em A',
-    antes:[
-      {id:'A',label:'A',fb:'+2',x:170,y:60,cor:'r'},
-      {id:'B',label:'B',fb:'+1',x:100,y:150,cor:'a'},
-      {id:'C',label:'C',fb:'0', x:44, y:240,cor:'g'},
-    ],
-    arestas_a:[['A','B'],['B','C']],
-    depois:[
-      {id:'B',label:'B',fb:'0',x:170,y:60,cor:'g'},
-      {id:'C',label:'C',fb:'0',x:100,y:150,cor:'g'},
-      {id:'A',label:'A',fb:'0',x:240,y:150,cor:'g'},
-    ],
-    arestas_d:[['B','C'],['B','A']],
-  },
-  RR:{
-    label:'Caso RR — Rotação simples à esquerda',
-    desc:'O nó <strong>A</strong> tem fator −2 e o filho direito <strong>B</strong> tem fator −1 (ou 0). Desequilíbrio à <strong>direita da subárvore direita</strong>. Solução: uma rotação simples à esquerda em A — B sobe, A desce como filho esquerdo de B.',
-    rot:'rotação à esquerda em A',
-    antes:[
-      {id:'A',label:'A',fb:'−2',x:170,y:60,cor:'r'},
-      {id:'B',label:'B',fb:'−1',x:240,y:150,cor:'a'},
-      {id:'C',label:'C',fb:'0', x:296,y:240,cor:'g'},
-    ],
-    arestas_a:[['A','B'],['B','C']],
-    depois:[
-      {id:'B',label:'B',fb:'0',x:170,y:60,cor:'g'},
-      {id:'A',label:'A',fb:'0',x:100,y:150,cor:'g'},
-      {id:'C',label:'C',fb:'0',x:240,y:150,cor:'g'},
-    ],
-    arestas_d:[['B','A'],['B','C']],
-  },
-  LR:{
-    label:'Caso LR — Rotação dupla: esquerda e depois direita',
-    desc:'O nó <strong>A</strong> tem fator +2, mas o filho esquerdo <strong>B</strong> tem fator −1 — o neto <strong>C</strong> está do lado oposto (zig-zag). Solução: rotação à esquerda em B, depois rotação à direita em A. C sobe como nova raiz.',
-    rot:'← esquerda em B, depois → direita em A',
-    antes:[
-      {id:'A',label:'A',fb:'+2',x:170,y:60,cor:'r'},
-      {id:'B',label:'B',fb:'−1',x:100,y:150,cor:'a'},
-      {id:'C',label:'C',fb:'0', x:156,y:240,cor:'g'},
-    ],
-    arestas_a:[['A','B'],['B','C']],
-    depois:[
-      {id:'C',label:'C',fb:'0',x:170,y:60,cor:'g'},
-      {id:'B',label:'B',fb:'0',x:100,y:150,cor:'g'},
-      {id:'A',label:'A',fb:'0',x:240,y:150,cor:'g'},
-    ],
-    arestas_d:[['C','B'],['C','A']],
-  },
-  RL:{
-    label:'Caso RL — Rotação dupla: direita e depois esquerda',
-    desc:'O nó <strong>A</strong> tem fator −2, mas o filho direito <strong>B</strong> tem fator +1 — o neto <strong>C</strong> está do lado oposto (zig-zag). Solução: rotação à direita em B, depois rotação à esquerda em A. C sobe como nova raiz.',
-    rot:'→ direita em B, depois ← esquerda em A',
-    antes:[
-      {id:'A',label:'A',fb:'−2',x:170,y:60,cor:'r'},
-      {id:'B',label:'B',fb:'+1',x:240,y:150,cor:'a'},
-      {id:'C',label:'C',fb:'0', x:184,y:240,cor:'g'},
-    ],
-    arestas_a:[['A','B'],['B','C']],
-    depois:[
-      {id:'C',label:'C',fb:'0',x:170,y:60,cor:'g'},
-      {id:'A',label:'A',fb:'0',x:100,y:150,cor:'g'},
-      {id:'B',label:'B',fb:'0',x:240,y:150,cor:'g'},
-    ],
-    arestas_d:[['C','A'],['C','B']],
+  const R = 25;
+
+  const COR = {
+    r: { fill: "#FCEBEB", stroke: "#A32D2D", nome: "#791F1F", fb: "#A32D2D" },
+    a: { fill: "#FAEEDA", stroke: "#854F0B", nome: "#633806", fb: "#854F0B" },
+    g: { fill: "#EAF3DE", stroke: "#3B6D11", nome: "#27500A", fb: "#3B6D11" },
+  };
+
+  const L_CX = 150;
+  const R_CX = 510;
+  const DIV = 330;
+
+  const CASOS = {
+    LL: {
+      titulo: "Caso LL — Rotação simples à direita",
+      desc: "O nó <strong>A</strong> tem fator +2 e o filho esquerdo <strong>B</strong> tem fator +1 (ou 0). Desequilíbrio à <strong>esquerda da subárvore esquerda</strong>. Solução: rotação simples à direita em A — B sobe, A desce como filho direito de B.",
+      rot: "rotação à direita em A",
+      antes: [
+        { id: "A", label: "A", fb: "+2", x: L_CX, y: 45, cor: "r" },
+        { id: "B", label: "B", fb: "+1", x: L_CX - 60, y: 120, cor: "a" },
+        { id: "C", label: "C", fb: "0", x: L_CX - 110, y: 195, cor: "g" },
+      ],
+      ea: [
+        ["A", "B"],
+        ["B", "C"],
+      ],
+      depois: [
+        { id: "B", label: "B", fb: "0", x: R_CX, y: 45, cor: "g" },
+        { id: "C", label: "C", fb: "0", x: R_CX - 60, y: 145, cor: "g" },
+        { id: "A", label: "A", fb: "0", x: R_CX + 60, y: 145, cor: "g" },
+      ],
+      ed: [
+        ["B", "C"],
+        ["B", "A"],
+      ],
+      ca: "desequilíbrio em A",
+      cd: "B sobe como nova raiz",
+    },
+    RR: {
+      titulo: "Caso RR — Rotação simples à esquerda",
+      desc: "O nó <strong>A</strong> tem fator −2 e o filho direito <strong>B</strong> tem fator −1 (ou 0). Desequilíbrio à <strong>direita da subárvore direita</strong>. Solução: rotação simples à esquerda em A — B sobe, A desce como filho esquerdo de B.",
+      rot: "rotação à esquerda em A",
+      antes: [
+        { id: "A", label: "A", fb: "−2", x: L_CX, y: 45, cor: "r" },
+        { id: "B", label: "B", fb: "−1", x: L_CX + 60, y: 120, cor: "a" },
+        { id: "C", label: "C", fb: "0", x: L_CX + 110, y: 195, cor: "g" },
+      ],
+      ea: [
+        ["A", "B"],
+        ["B", "C"],
+      ],
+      depois: [
+        { id: "B", label: "B", fb: "0", x: R_CX, y: 45, cor: "g" },
+        { id: "A", label: "A", fb: "0", x: R_CX - 60, y: 145, cor: "g" },
+        { id: "C", label: "C", fb: "0", x: R_CX + 60, y: 145, cor: "g" },
+      ],
+      ed: [
+        ["B", "A"],
+        ["B", "C"],
+      ],
+      ca: "desequilíbrio em A",
+      cd: "B sobe como nova raiz",
+    },
+    LR: {
+      titulo: "Caso LR — Rotação dupla: esquerda depois direita",
+      desc: "O nó <strong>A</strong> tem fator +2, mas o filho esquerdo <strong>B</strong> tem fator −1 — o neto <strong>C</strong> está do lado oposto (zig-zag). Solução: rotação à esquerda em B, depois à direita em A. C sobe como nova raiz.",
+      rot: "← esquerda em B, depois → direita em A",
+      antes: [
+        { id: "A", label: "A", fb: "+2", x: L_CX, y: 45, cor: "r" },
+        { id: "B", label: "B", fb: "−1", x: L_CX - 60, y: 120, cor: "a" },
+        { id: "C", label: "C", fb: "0", x: L_CX - 10, y: 195, cor: "g" },
+      ],
+      ea: [
+        ["A", "B"],
+        ["B", "C"],
+      ],
+      depois: [
+        { id: "C", label: "C", fb: "0", x: R_CX, y: 45, cor: "g" },
+        { id: "B", label: "B", fb: "0", x: R_CX - 60, y: 145, cor: "g" },
+        { id: "A", label: "A", fb: "0", x: R_CX + 60, y: 145, cor: "g" },
+      ],
+      ed: [
+        ["C", "B"],
+        ["C", "A"],
+      ],
+      ca: "desequilíbrio em A (zig-zag)",
+      cd: "C sobe como nova raiz",
+    },
+    RL: {
+      titulo: "Caso RL — Rotação dupla: direita depois esquerda",
+      desc: "O nó <strong>A</strong> tem fator −2, mas o filho direito <strong>B</strong> tem fator +1 — o neto <strong>C</strong> está do lado oposto (zig-zag). Solução: rotação à direita em B, depois à esquerda em A. C sobe como nova raiz.",
+      rot: "→ direita em B, depois ← esquerda em A",
+      antes: [
+        { id: "A", label: "A", fb: "−2", x: L_CX, y: 45, cor: "r" },
+        { id: "B", label: "B", fb: "+1", x: L_CX + 60, y: 120, cor: "a" },
+        { id: "C", label: "C", fb: "0", x: L_CX + 10, y: 195, cor: "g" },
+      ],
+      ea: [
+        ["A", "B"],
+        ["B", "C"],
+      ],
+      depois: [
+        { id: "C", label: "C", fb: "0", x: R_CX, y: 45, cor: "g" },
+        { id: "A", label: "A", fb: "0", x: R_CX - 60, y: 145, cor: "g" },
+        { id: "B", label: "B", fb: "0", x: R_CX + 60, y: 145, cor: "g" },
+      ],
+      ed: [
+        ["C", "A"],
+        ["C", "B"],
+      ],
+      ca: "desequilíbrio em A (zig-zag)",
+      cd: "C sobe como nova raiz",
+    },
+  };
+
+  function drawEdges(svg, nos, arestas, cor, mid) {
+    const pos = {};
+    nos.forEach(n => (pos[n.id] = { x: n.x, y: n.y }));
+    arestas.forEach(([a, b]) => {
+      const pa = pos[a],
+        pb = pos[b];
+      const dx = pb.x - pa.x,
+        dy = pb.y - pa.y,
+        dist = Math.sqrt(dx * dx + dy * dy);
+      const x1 = pa.x + (dx / dist) * R,
+        y1 = pa.y + (dy / dist) * R;
+      const x2 = pb.x - (dx / dist) * (R + 4),
+        y2 = pb.y - (dy / dist) * (R + 4);
+      const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      l.setAttribute("x1", x1);
+      l.setAttribute("y1", y1);
+      l.setAttribute("x2", x2);
+      l.setAttribute("y2", y2);
+      l.setAttribute("stroke", cor);
+      l.setAttribute("stroke-width", "1");
+      if (mid) l.setAttribute("marker-end", "url(#" + mid + ")");
+      svg.insertBefore(l, svg.querySelector("g") || null);
+    });
   }
-};
 
-const COR = {
-  r:{fill:'#FCEBEB',stroke:'#A32D2D',nome:'#791F1F',fb:'#A32D2D'},
-  a:{fill:'#FAEEDA',stroke:'#854F0B',nome:'#633806',fb:'#854F0B'},
-  g:{fill:'#EAF3DE',stroke:'#3B6D11',nome:'#27500A',fb:'#3B6D11'},
-};
+  function drawNodes(svg, nos) {
+    nos.forEach(n => {
+      const c = COR[n.cor];
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const circ = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circ.setAttribute("cx", n.x);
+      circ.setAttribute("cy", n.y);
+      circ.setAttribute("r", R);
+      circ.setAttribute("fill", c.fill);
+      circ.setAttribute("stroke", c.stroke);
+      circ.setAttribute("stroke-width", "1.2");
+      const tN = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tN.setAttribute("x", n.x);
+      tN.setAttribute("y", n.y - 7);
+      tN.setAttribute("text-anchor", "middle");
+      tN.setAttribute("dominant-baseline", "central");
+      tN.setAttribute("font-size", "15");
+      tN.setAttribute("font-weight", "500");
+      tN.setAttribute("fill", c.nome);
+      tN.textContent = n.label;
+      const tF = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tF.setAttribute("x", n.x);
+      tF.setAttribute("y", n.y + 11);
+      tF.setAttribute("text-anchor", "middle");
+      tF.setAttribute("dominant-baseline", "central");
+      tF.setAttribute("font-size", "11");
+      tF.setAttribute("fill", c.fb);
+      tF.textContent = "(" + n.fb + ")";
+      g.appendChild(circ);
+      g.appendChild(tN);
+      g.appendChild(tF);
+      svg.appendChild(g);
+    });
+  }
 
-const R = 28;
-const OX = 340;
+  function mkT(svg, x, y, txt, sz, fw, fill) {
+    const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    t.setAttribute("x", x);
+    t.setAttribute("y", y);
+    t.setAttribute("text-anchor", "middle");
+    t.setAttribute("font-size", sz || 12);
+    t.setAttribute("font-weight", fw || "400");
+    t.setAttribute("fill", fill || "var(--color-text-secondary)");
+    t.textContent = txt;
+    svg.appendChild(t);
+  }
 
-function noPos(nos) {
-  const m = {};
-  nos.forEach(n => m[n.id] = {x:n.x, y:n.y});
-  return m;
-}
+  function show(id, btn) {
+    document.querySelectorAll(".tab").forEach(b => b.classList.remove("on"));
+    btn.classList.add("on");
+    const c = CASOS[id];
+    document.getElementById("dtitulo").textContent = c.titulo;
+    document.getElementById("dcorpo").innerHTML = c.desc;
+    const svg = document.getElementById("sv");
 
-function drawTree(svg, nos, arestas, offX, cor_arestas) {
-  const pos = noPos(nos);
-  arestas.forEach(([a,b]) => {
-    const pa = pos[a], pb = pos[b];
-    const dx = pb.x - pa.x, dy = pb.y - pa.y;
-    const dist = Math.sqrt(dx*dx+dy*dy);
-    const x1 = pa.x + offX + (dx/dist)*R;
-    const y1 = pa.y + (dy/dist)*R;
-    const x2 = pb.x + offX - (dx/dist)*(R+2);
-    const y2 = pb.y - (dy/dist)*(R+2);
-    const l = document.createElementNS('http://www.w3.org/2000/svg','line');
-    l.setAttribute('x1',x1); l.setAttribute('y1',y1);
-    l.setAttribute('x2',x2); l.setAttribute('y2',y2);
-    l.setAttribute('stroke', cor_arestas||'var(--color-border-secondary)');
-    l.setAttribute('stroke-width','1');
-    l.setAttribute('marker-end','url(#arr)');
-    svg.insertBefore(l, svg.querySelector('g'));
-  });
-  nos.forEach(n => {
-    const c = COR[n.cor];
-    const cx = n.x + offX, cy = n.y;
-    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
-    const circ = document.createElementNS('http://www.w3.org/2000/svg','circle');
-    circ.setAttribute('cx',cx); circ.setAttribute('cy',cy); circ.setAttribute('r',R);
-    circ.setAttribute('fill',c.fill); circ.setAttribute('stroke',c.stroke); circ.setAttribute('stroke-width','1');
-    const tNome = document.createElementNS('http://www.w3.org/2000/svg','text');
-    tNome.setAttribute('x',cx); tNome.setAttribute('y',cy-7);
-    tNome.setAttribute('text-anchor','middle'); tNome.setAttribute('dominant-baseline','central');
-    tNome.setAttribute('font-size','15'); tNome.setAttribute('font-weight','500');
-    tNome.setAttribute('fill',c.nome); tNome.textContent = n.label;
-    const tFb = document.createElementNS('http://www.w3.org/2000/svg','text');
-    tFb.setAttribute('x',cx); tFb.setAttribute('y',cy+10);
-    tFb.setAttribute('text-anchor','middle'); tFb.setAttribute('dominant-baseline','central');
-    tFb.setAttribute('font-size','11'); tFb.setAttribute('fill',c.fb);
-    tFb.textContent = '('+n.fb+')';
-    g.appendChild(circ); g.appendChild(tNome); g.appendChild(tFb);
-    svg.appendChild(g);
-  });
-}
-
-function show(id, btn) {
-  document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  const c = CASOS[id];
-  document.getElementById('desc').innerHTML = '<strong>'+c.label+'</strong><br>'+c.desc;
-  const svg = document.getElementById('sv');
-  svg.innerHTML = `<defs>
-    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-      <path d="M2 2L8 5L2 8" fill="none" stroke="var(--color-border-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </marker>
-    <marker id="arrG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+    svg.innerHTML = `<defs>
+    <marker id="mG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
       <path d="M2 2L8 5L2 8" fill="none" stroke="#3B6D11" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="mN" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 2L8 5L2 8" fill="none" stroke="#B4B2A9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="mA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 2L8 5L2 8" fill="none" stroke="#BA7517" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
   </defs>`;
 
-  const divX = OX;
+    const divLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    divLine.setAttribute("x1", DIV);
+    divLine.setAttribute("y1", 8);
+    divLine.setAttribute("x2", DIV);
+    divLine.setAttribute("y2", 222);
+    divLine.setAttribute("stroke", "var(--color-border-tertiary)");
+    divLine.setAttribute("stroke-width", "0.5");
+    divLine.setAttribute("stroke-dasharray", "4 3");
+    svg.appendChild(divLine);
 
-  const div = document.createElementNS('http://www.w3.org/2000/svg','line');
-  div.setAttribute('x1',divX); div.setAttribute('y1',20);
-  div.setAttribute('x2',divX); div.setAttribute('y2',290);
-  div.setAttribute('stroke','var(--color-border-tertiary)'); div.setAttribute('stroke-width','0.5'); div.setAttribute('stroke-dasharray','4 3');
-  svg.appendChild(div);
+    mkT(svg, L_CX, 14, "antes da rotação", 12, "500", "#A32D2D");
+    mkT(svg, R_CX, 14, "após rotação", 12, "500", "#3B6D11");
 
-  const mkLabel = (x,y,txt,cor) => {
-    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
-    t.setAttribute('x',x); t.setAttribute('y',y); t.setAttribute('text-anchor','middle');
-    t.setAttribute('font-size','12'); t.setAttribute('font-weight','500'); t.setAttribute('fill',cor||'var(--color-text-secondary)');
-    t.textContent = txt; svg.appendChild(t);
-  };
-  mkLabel(divX/2, 22, 'antes da rotação', '#A32D2D');
-  mkLabel(divX + divX/2, 22, 'após rotação', '#3B6D11');
+    const arrLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    arrLine.setAttribute("x1", DIV - 36);
+    arrLine.setAttribute("y1", 120);
+    arrLine.setAttribute("x2", DIV + 36);
+    arrLine.setAttribute("y2", 120);
+    arrLine.setAttribute("stroke", "#BA7517");
+    arrLine.setAttribute("stroke-width", "1.5");
+    arrLine.setAttribute("marker-end", "url(#mA)");
+    svg.appendChild(arrLine);
+    mkT(svg, DIV, 137, c.rot, 11, "500", "#BA7517");
 
-  const arrSvg = document.createElementNS('http://www.w3.org/2000/svg','line');
-  arrSvg.setAttribute('x1',divX-32); arrSvg.setAttribute('y1',148);
-  arrSvg.setAttribute('x2',divX+32); arrSvg.setAttribute('y2',148);
-  arrSvg.setAttribute('stroke','#BA7517'); arrSvg.setAttribute('stroke-width','1.5');
-  arrSvg.setAttribute('marker-end','url(#amber-arrow)');
-  const defAmber = document.createElementNS('http://www.w3.org/2000/svg','defs');
-  defAmber.innerHTML = `<marker id="amber-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M2 2L8 5L2 8" fill="none" stroke="#BA7517" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>`;
-  svg.appendChild(defAmber);
-  svg.appendChild(arrSvg);
-  mkLabel(divX, 163, c.rot, '#BA7517');
+    drawEdges(svg, c.antes, c.ea, "#B4B2A9", "mN");
+    drawNodes(svg, c.antes);
+    drawEdges(svg, c.depois, c.ed, "#3B6D11", "mG");
+    drawNodes(svg, c.depois);
 
-  drawTree(svg, c.antes, c.arestas_a, 0, 'var(--color-border-secondary)');
-  drawTree(svg, c.depois, c.arestas_d, divX, '#3B6D11');
+    mkT(svg, L_CX, 236, c.ca, 11, "400", "#A32D2D");
+    mkT(svg, R_CX, 236, c.cd, 11, "400", "#3B6D11");
+  }
 
-  const captAntes = c.antes[0];
-  const captDepois = c.depois[0];
-  const subA = document.createElementNS('http://www.w3.org/2000/svg','text');
-  subA.setAttribute('x', divX/2); subA.setAttribute('y', 288);
-  subA.setAttribute('text-anchor','middle'); subA.setAttribute('font-size','11');
-  subA.setAttribute('fill','#A32D2D');
-  subA.textContent = 'inserção cria desequilíbrio em '+captAntes.label;
-  svg.appendChild(subA);
-
-  const subD = document.createElementNS('http://www.w3.org/2000/svg','text');
-  subD.setAttribute('x', divX+divX/2); subD.setAttribute('y', 288);
-  subD.setAttribute('text-anchor','middle'); subD.setAttribute('font-size','11');
-  subD.setAttribute('fill','#3B6D11');
-  subD.textContent = captDepois.label+' sobe como nova raiz';
-  svg.appendChild(subD);
-}
-
-show('LL', document.querySelector('.tab.on'));
+  show("LL", document.querySelector(".tab.on"));
 </script>
