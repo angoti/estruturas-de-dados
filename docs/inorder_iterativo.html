@@ -1,0 +1,203 @@
+
+<style>
+.btn{padding:6px 14px;border-radius:6px;border:1px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);font-size:13px;cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--color-background-tertiary)}
+.btn.active{background:#1D9E75;color:#fff;border-color:#1D9E75}
+.panel{background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:8px;padding:10px 14px}
+.label{font-size:11px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.stack-frame{font-family:var(--font-mono);font-size:12px;padding:4px 10px;border-radius:4px;border:1px solid var(--color-border-secondary);background:var(--color-background-primary);margin-bottom:3px;color:var(--color-text-primary)}
+.stack-top{border-color:#BA7517;background:#FAEEDA;color:#633806}
+</style>
+
+<div style="display:flex;gap:8px;margin-bottom:12px">
+  <button class="btn active" onclick="setMode('iterativo',this)">Iterativo (pilha explícita)</button>
+  <button class="btn" onclick="setMode('recursivo',this)">Recursivo (call stack)</button>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start">
+
+<svg id="svg-tree" width="100%" viewBox="0 0 440 210" style="display:block">
+  <line x1="220" y1="46"  x2="130" y2="116" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
+  <line x1="220" y1="46"  x2="310" y2="116" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
+  <line x1="130" y1="136" x2="85"  y2="186" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
+  <line x1="130" y1="136" x2="175" y2="186" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
+  <line x1="310" y1="136" x2="265" y2="186" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
+  <line x1="310" y1="136" x2="355" y2="186" stroke="var(--color-text-tertiary)" stroke-width="1.5"/>
+  <g id="n10"><circle cx="220" cy="36"  r="22" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="220" y="36"  text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="500" fill="#085041" font-family="var(--font-mono)">10</text></g>
+  <g id="n5" ><circle cx="130" cy="126" r="22" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="130" y="126" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="500" fill="#085041" font-family="var(--font-mono)">5</text></g>
+  <g id="n15"><circle cx="310" cy="126" r="22" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="310" y="126" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="500" fill="#085041" font-family="var(--font-mono)">15</text></g>
+  <g id="n3" ><circle cx="85"  cy="196" r="22" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="85"  y="196" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="500" fill="#085041" font-family="var(--font-mono)">3</text></g>
+  <g id="n7" ><circle cx="175" cy="196" r="22" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="175" y="196" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="500" fill="#085041" font-family="var(--font-mono)">7</text></g>
+  <g id="n12"><circle cx="265" cy="196" r="22" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="265" y="196" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="500" fill="#085041" font-family="var(--font-mono)">12</text></g>
+  <g id="n20"><circle cx="355" cy="196" r="22" fill="#E1F5EE" stroke="#1D9E75" stroke-width="1.5"/><text x="355" y="196" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="500" fill="#085041" font-family="var(--font-mono)">20</text></g>
+</svg>
+
+<!-- pilha visual -->
+<div style="min-width:140px">
+  <div class="label" id="stack-label">Pilha (topo → base)</div>
+  <div id="stack-vis" style="min-height:120px">
+    <div style="font-size:12px;color:var(--color-text-secondary);font-family:var(--font-mono)">vazia</div>
+  </div>
+</div>
+
+</div><!-- fim grid -->
+
+<div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+  <button class="btn" onclick="prev()">← Anterior</button>
+  <button class="btn" onclick="next()">Próximo →</button>
+  <button class="btn" onclick="reset()">↺ Reiniciar</button>
+  <span id="counter" style="font-size:12px;color:var(--color-text-secondary)"></span>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;margin-bottom:8px">
+  <div class="panel">
+    <div class="label" id="var-label">atual (ponteiro)</div>
+    <div style="font-family:var(--font-mono);font-size:14px;font-weight:500;color:#BA7517;min-height:20px" id="var-atual">—</div>
+  </div>
+  <div class="panel">
+    <div class="label">Resultado (in-order)</div>
+    <div style="font-family:var(--font-mono);font-size:13px;color:#1D9E75;min-height:20px" id="seq">—</div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="label">O que está acontecendo</div>
+  <div id="explain" style="font-size:13px;color:var(--color-text-primary);line-height:1.6;min-height:42px">Clique em Próximo para iniciar.</div>
+</div>
+
+<script>
+const ALL = ['n10','n5','n15','n3','n7','n12','n20'];
+
+const MODES = {
+  iterativo: {
+    stackLabel: 'Pilha explícita (topo → base)',
+    varLabel:   'atual (ponteiro)',
+    steps: [
+      { cur:'n10', visited:[], stack:['10','5','3'],   seq:[],              atual:'10→5→3→null',
+        explain:'atual=10 (raiz). Desce pela esquerda empilhando: push(10), atual=5; push(5), atual=3; push(3), atual=null. Para.' },
+      { cur:'n3',  visited:[], stack:['10','5','3'],   seq:[],              atual:'null',
+        explain:'atual==null. pop() → 3. Visita 3 (sem filho dir). resultado.add(3). atual = esq(3) = null.' },
+      { cur:'n3',  visited:['n3'], stack:['10','5'],   seq:[3],             atual:'null',
+        explain:'atual==null. pop() → 5. Visita 5. resultado.add(5). atual = dir(5) = 7.' },
+      { cur:'n5',  visited:['n3'], stack:['10'],       seq:[3,5],           atual:'7',
+        explain:'atual=7. Desce pela esquerda: push(7), atual=null. Para.' },
+      { cur:'n7',  visited:['n3','n5'], stack:['10','7'], seq:[3,5],        atual:'null',
+        explain:'atual==null. pop() → 7. Visita 7 (sem filho dir). resultado.add(7). atual = null.' },
+      { cur:'n7',  visited:['n3','n5','n7'], stack:['10'], seq:[3,5,7],     atual:'null',
+        explain:'atual==null. pop() → 10. Visita 10. resultado.add(10). atual = dir(10) = 15.' },
+      { cur:'n10', visited:['n3','n5','n7'], stack:['15','12'], seq:[3,5,7,10], atual:'15→12→null',
+        explain:'atual=15. Desce pela esquerda: push(15), atual=12; push(12), atual=null. Para.' },
+      { cur:'n12', visited:['n3','n5','n7','n10'], stack:['15','12'], seq:[3,5,7,10], atual:'null',
+        explain:'atual==null. pop() → 12. Visita 12 (sem filho dir). resultado.add(12). atual = null.' },
+      { cur:'n12', visited:['n3','n5','n7','n10','n12'], stack:['15'], seq:[3,5,7,10,12], atual:'null',
+        explain:'atual==null. pop() → 15. Visita 15. resultado.add(15). atual = dir(15) = 20.' },
+      { cur:'n15', visited:['n3','n5','n7','n10','n12'], stack:['20'], seq:[3,5,7,10,12,15], atual:'20→null',
+        explain:'atual=20. push(20), atual=null. Para.' },
+      { cur:'n20', visited:['n3','n5','n7','n10','n12','n15'], stack:['20'], seq:[3,5,7,10,12,15], atual:'null',
+        explain:'atual==null. pop() → 20. Visita 20 (sem filho dir). resultado.add(20). Pilha vazia → termina!' },
+      { cur:null,  visited:['n3','n5','n7','n10','n12','n15','n20'], stack:[], seq:[3,5,7,10,12,15,20], atual:'null',
+        explain:'Pilha vazia e atual==null → while termina. Resultado: [3, 5, 7, 10, 12, 15, 20] ✓' },
+    ]
+  },
+  recursivo: {
+    stackLabel: 'Call stack da JVM (topo → base)',
+    varLabel:   'frame atual',
+    steps: [
+      { cur:'n10', visited:[], stack:['rec(10)'],                    seq:[],           atual:'rec(10)',
+        explain:'Chama rec(10). Não é null. Chama rec(esquerdo=5) primeiro — empilha frame rec(10) na call stack.' },
+      { cur:'n5',  visited:[], stack:['rec(5)','rec(10)'],           seq:[],           atual:'rec(5)',
+        explain:'Chama rec(5). Chama rec(esquerdo=3) — empilha frame rec(5).' },
+      { cur:'n3',  visited:[], stack:['rec(3)','rec(5)','rec(10)'],  seq:[],           atual:'rec(3)',
+        explain:'Chama rec(3). Chama rec(esquerdo=null) → retorna. Visita 3. resultado.add(3).' },
+      { cur:'n3',  visited:['n3'], stack:['rec(3)','rec(5)','rec(10)'], seq:[3],       atual:'rec(3)',
+        explain:'Chama rec(direito=null) → retorna. rec(3) termina — desempilha da call stack.' },
+      { cur:'n5',  visited:['n3'], stack:['rec(5)','rec(10)'],       seq:[3],          atual:'rec(5)',
+        explain:'Volta para rec(5). Visita 5. resultado.add(5). Chama rec(direito=7).' },
+      { cur:'n7',  visited:['n3','n5'], stack:['rec(7)','rec(5)','rec(10)'], seq:[3,5], atual:'rec(7)',
+        explain:'rec(7): esq=null → retorna. Visita 7. resultado.add(7). dir=null → retorna. Desempilha.' },
+      { cur:'n10', visited:['n3','n5','n7'], stack:['rec(10)'],      seq:[3,5,7],      atual:'rec(10)',
+        explain:'Volta para rec(10). Visita 10. resultado.add(10). Chama rec(direito=15).' },
+      { cur:'n15', visited:['n3','n5','n7','n10'], stack:['rec(15)','rec(10)'], seq:[3,5,7,10], atual:'rec(15)',
+        explain:'rec(15): chama rec(esq=12). Empilha frame rec(15).' },
+      { cur:'n12', visited:['n3','n5','n7','n10'], stack:['rec(12)','rec(15)','rec(10)'], seq:[3,5,7,10], atual:'rec(12)',
+        explain:'rec(12): esq=null. Visita 12. resultado.add(12). dir=null. Desempilha.' },
+      { cur:'n15', visited:['n3','n5','n7','n10','n12'], stack:['rec(15)','rec(10)'], seq:[3,5,7,10,12], atual:'rec(15)',
+        explain:'Volta para rec(15). Visita 15. resultado.add(15). Chama rec(dir=20).' },
+      { cur:'n20', visited:['n3','n5','n7','n10','n12','n15'], stack:['rec(20)','rec(15)','rec(10)'], seq:[3,5,7,10,12,15], atual:'rec(20)',
+        explain:'rec(20): esq=null. Visita 20. resultado.add(20). dir=null. Desempilha.' },
+      { cur:null,  visited:['n3','n5','n7','n10','n12','n15','n20'], stack:[], seq:[3,5,7,10,12,15,20], atual:'—',
+        explain:'rec(15) e rec(10) desempilham. Call stack vazia. Resultado: [3, 5, 7, 10, 12, 15, 20] ✓' },
+    ]
+  }
+};
+
+let mode='iterativo', idx=-1;
+
+function circ(id){ return document.getElementById(id).querySelector('circle'); }
+function txtel(id){ return document.getElementById(id).querySelector('text'); }
+
+function resetColors(){
+  ALL.forEach(id=>{
+    circ(id).setAttribute('fill','#E1F5EE');
+    circ(id).setAttribute('stroke','#1D9E75');
+    txtel(id).setAttribute('fill','#085041');
+  });
+}
+
+function renderStack(frames){
+  const div = document.getElementById('stack-vis');
+  if(!frames||frames.length===0){
+    div.innerHTML='<div style="font-size:12px;color:var(--color-text-secondary);font-family:var(--font-mono)">vazia</div>';
+    return;
+  }
+  div.innerHTML = frames.map((f,i)=>
+    `<div class="stack-frame${i===0?' stack-top':''}">${i===0?'→ ':''} ${f}</div>`
+  ).join('');
+}
+
+function applyStep(i){
+  resetColors();
+  const m = MODES[mode];
+  document.getElementById('stack-label').textContent = m.stackLabel;
+  document.getElementById('var-label').textContent   = m.varLabel;
+
+  if(i<0){
+    renderStack([]);
+    document.getElementById('var-atual').textContent='—';
+    document.getElementById('seq').textContent='—';
+    document.getElementById('explain').textContent='Clique em Próximo para iniciar.';
+    document.getElementById('counter').textContent=`Passo 0 de ${m.steps.length}`;
+    return;
+  }
+
+  const s = m.steps[i];
+
+  s.visited.forEach(id=>{
+    circ(id).setAttribute('fill','#EEEDFE');
+    circ(id).setAttribute('stroke','#534AB7');
+    txtel(id).setAttribute('fill','#3C3489');
+  });
+  if(s.cur){
+    circ(s.cur).setAttribute('fill','#FAEEDA');
+    circ(s.cur).setAttribute('stroke','#BA7517');
+    txtel(s.cur).setAttribute('fill','#633806');
+  }
+
+  renderStack(s.stack);
+  document.getElementById('var-atual').textContent = s.atual;
+  document.getElementById('seq').textContent = s.seq.length ? s.seq.join(' → ') : '—';
+  document.getElementById('explain').textContent = s.explain;
+  document.getElementById('counter').textContent = `Passo ${i+1} de ${m.steps.length}`;
+}
+
+function next(){ const m=MODES[mode]; if(idx<m.steps.length-1){idx++;applyStep(idx);} }
+function prev(){ if(idx>-1){idx--;applyStep(idx);} }
+function reset(){ idx=-1; applyStep(-1); }
+function setMode(m,el){
+  mode=m; idx=-1;
+  document.querySelectorAll('.btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  applyStep(-1);
+}
+applyStep(-1);
+</script>

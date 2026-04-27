@@ -1,0 +1,204 @@
+
+<style>
+  .caso-btn { padding: 6px 14px; font-size: 13px; border-radius: 6px; cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); transition: all .15s; }
+  .caso-btn.ativo { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); font-weight: 500; }
+  .caso-btn:hover:not(.ativo) { background: var(--color-background-secondary); }
+  .rotulo-fator { font-size: 11px; fill: var(--color-text-danger, #A32D2D); font-weight: 500; }
+  .rotulo-ok { font-size: 11px; fill: var(--color-text-success, #3B6D11); font-weight: 500; }
+  .seta-rot { stroke: #BA7517; stroke-width: 1.5; fill: none; stroke-dasharray: 5 3; }
+  .label-rot { font-size: 11px; fill: #BA7517; font-weight: 500; }
+  .badge { font-size: 12px; font-weight: 500; }
+</style>
+
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;">
+  <button class="caso-btn ativo" onclick="mostrar('LL')">Caso LL</button>
+  <button class="caso-btn" onclick="mostrar('RR')">Caso RR</button>
+  <button class="caso-btn" onclick="mostrar('LR')">Caso LR</button>
+  <button class="caso-btn" onclick="mostrar('RL')">Caso RL</button>
+</div>
+
+<div id="desc" style="font-size:13px;color:var(--color-text-secondary);margin-bottom:12px;line-height:1.5;"></div>
+
+<svg id="svg-avl" width="100%" viewBox="0 0 680 300"></svg>
+
+<script>
+const casos = {
+  LL: {
+    titulo: "Caso LL — Rotação simples à direita",
+    desc: "O nó A tem fator de balanceamento +2 e seu filho esquerdo B tem fator +1 (ou 0). O desequilíbrio está à <strong>esquerda da subárvore esquerda</strong>. Solução: rotação simples à direita em A.",
+    antes: { raiz:"A(+2)", esq:"B(+1)", esqesq:"C(0)", info: "Inserção à esquerda de B cria fator +2 em A" },
+    depois: { raiz:"B(0)", esq:"C(0)", dir:"A(0)", info: "B sobe, A desce para a direita de B" },
+    rotacao: "→ direita em A"
+  },
+  RR: {
+    titulo: "Caso RR — Rotação simples à esquerda",
+    desc: "O nó A tem fator de balanceamento −2 e seu filho direito B tem fator −1 (ou 0). O desequilíbrio está à <strong>direita da subárvore direita</strong>. Solução: rotação simples à esquerda em A.",
+    antes: { raiz:"A(−2)", dir:"B(−1)", dirdir:"C(0)", info: "Inserção à direita de B cria fator −2 em A" },
+    depois: { raiz:"B(0)", esq:"A(0)", dir:"C(0)", info: "B sobe, A desce para a esquerda de B" },
+    rotacao: "← esquerda em A"
+  },
+  LR: {
+    titulo: "Caso LR — Rotação dupla: esquerda depois direita",
+    desc: "O nó A tem fator +2, seu filho esquerdo B tem fator −1. O desequilíbrio está à <strong>direita do filho esquerdo</strong>. Solução: rotação esquerda em B, depois rotação direita em A.",
+    antes: { raiz:"A(+2)", esq:"B(−1)", esqdir:"C(0)", info: "Inserção à direita de B — desequilíbrio em zig-zag" },
+    depois: { raiz:"C(0)", esq:"B(0)", dir:"A(0)", info: "C sobe como nova raiz, B e A ficam como filhos" },
+    rotacao: "← esquerda em B, → direita em A"
+  },
+  RL: {
+    titulo: "Caso RL — Rotação dupla: direita depois esquerda",
+    desc: "O nó A tem fator −2, seu filho direito B tem fator +1. O desequilíbrio está à <strong>esquerda do filho direito</strong>. Solução: rotação direita em B, depois rotação esquerda em A.",
+    antes: { raiz:"A(−2)", dir:"B(+1)", diresq:"C(0)", info: "Inserção à esquerda de B — desequilíbrio em zig-zag" },
+    depois: { raiz:"C(0)", esq:"A(0)", dir:"B(0)", info: "C sobe como nova raiz, A e B ficam como filhos" },
+    rotacao: "→ direita em B, ← esquerda em A"
+  }
+};
+
+function noCor(texto) {
+  if (texto.includes('+2') || texto.includes('−2')) return { fill:'#F7C1C1', stroke:'#A32D2D', text:'#791F1F' };
+  if (texto.includes('+1') || texto.includes('−1')) return { fill:'#FAC775', stroke:'#BA7517', text:'#633806' };
+  return { fill:'#C0DD97', stroke:'#3B6D11', text:'#173404' };
+}
+
+function desenharNo(svg, x, y, texto, r=28) {
+  const c = noCor(texto);
+  const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+  const circ = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  circ.setAttribute('cx', x); circ.setAttribute('cy', y); circ.setAttribute('r', r);
+  circ.setAttribute('fill', c.fill); circ.setAttribute('stroke', c.stroke); circ.setAttribute('stroke-width','1');
+  const partes = texto.split('(');
+  const nome = partes[0];
+  const fator = partes[1] ? '('+partes[1] : '';
+  const t1 = document.createElementNS('http://www.w3.org/2000/svg','text');
+  t1.setAttribute('x', x); t1.setAttribute('y', fator ? y-5 : y+5);
+  t1.setAttribute('text-anchor','middle'); t1.setAttribute('dominant-baseline','central');
+  t1.setAttribute('font-size','14'); t1.setAttribute('font-weight','500'); t1.setAttribute('fill', c.text);
+  t1.textContent = nome;
+  g.appendChild(circ); g.appendChild(t1);
+  if (fator) {
+    const t2 = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t2.setAttribute('x', x); t2.setAttribute('y', y+10);
+    t2.setAttribute('text-anchor','middle'); t2.setAttribute('dominant-baseline','central');
+    t2.setAttribute('font-size','10'); t2.setAttribute('fill', c.text); t2.setAttribute('opacity','0.85');
+    t2.textContent = fator;
+    g.appendChild(t2);
+  }
+  svg.appendChild(g);
+  return {x, y, r};
+}
+
+function linha(svg, x1, y1, x2, y2, cor) {
+  const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+  l.setAttribute('x1',x1); l.setAttribute('y1',y1); l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+  l.setAttribute('stroke', cor||'var(--color-border-secondary)'); l.setAttribute('stroke-width','1');
+  svg.insertBefore(l, svg.firstChild);
+}
+
+function texto(svg, x, y, t, cls, anc) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg','text');
+  el.setAttribute('x',x); el.setAttribute('y',y);
+  el.setAttribute('text-anchor', anc||'middle');
+  el.setAttribute('dominant-baseline','central');
+  el.setAttribute('class', cls||'');
+  el.setAttribute('font-size','12');
+  el.innerHTML = t;
+  svg.appendChild(el);
+}
+
+function seta(svg, cx, cy, r, caso) {
+  const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+  let d;
+  if (caso === 'dir') d = `M${cx-r},${cy-20} C${cx-r-30},${cy-60} ${cx+r+30},${cy-60} ${cx+r},${cy-20}`;
+  else if (caso === 'esq') d = `M${cx+r},${cy-20} C${cx+r+30},${cy-60} ${cx-r-30},${cy-60} ${cx-r},${cy-20}`;
+  else if (caso === 'dupla') d = `M${cx-r-10},${cy-20} C${cx-r-50},${cy-70} ${cx+r+50},${cy-70} ${cx+r+10},${cy-20}`;
+  path.setAttribute('d', d);
+  path.setAttribute('class','seta-rot');
+  path.setAttribute('marker-end','url(#arrowAmber)');
+  svg.appendChild(path);
+}
+
+function mostrar(id) {
+  document.querySelectorAll('.caso-btn').forEach(b => b.classList.toggle('ativo', b.textContent.trim()===`Caso ${id}`));
+  const c = casos[id];
+  document.getElementById('desc').innerHTML = `<strong>${c.titulo}</strong><br>${c.desc}`;
+  const svg = document.getElementById('svg-avl');
+  svg.innerHTML = `<defs>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#BA7517" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arrowGray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="var(--color-border-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>`;
+
+  const W = 680;
+  const col1 = 155, col2 = 490;
+  const r = 26;
+
+  // --- RÓTULOS dos painéis ---
+  texto(svg, col1, 18, 'antes da rotação', 'rotulo-fator');
+  texto(svg, col2, 18, 'após rotação', 'rotulo-ok');
+
+  // Divisória
+  const div = document.createElementNS('http://www.w3.org/2000/svg','line');
+  div.setAttribute('x1',W/2); div.setAttribute('y1',10);
+  div.setAttribute('x2',W/2); div.setAttribute('y2',295);
+  div.setAttribute('stroke','var(--color-border-tertiary)'); div.setAttribute('stroke-width','0.5'); div.setAttribute('stroke-dasharray','4 4');
+  svg.appendChild(div);
+
+  // Seta central indicando rotação
+  const setaC = document.createElementNS('http://www.w3.org/2000/svg','line');
+  setaC.setAttribute('x1',W/2-28); setaC.setAttribute('y1',120);
+  setaC.setAttribute('x2',W/2+28); setaC.setAttribute('y2',120);
+  setaC.setAttribute('stroke','#BA7517'); setaC.setAttribute('stroke-width','1.5');
+  setaC.setAttribute('marker-end','url(#arrowAmber)');
+  svg.appendChild(setaC);
+  texto(svg, W/2, 140, c.rotacao, 'label-rot');
+
+  // ================== DESENHAR ANTES ==================
+  const a = c.antes;
+  // raiz
+  let raizA = desenharNo(svg, col1, 70, a.raiz, r);
+  // filho esq
+  if (a.esq) {
+    let esqA = desenharNo(svg, col1-65, 155, a.esq, r);
+    linha(svg, col1, 70+r, col1-65, 155-r, '#888');
+    if (a.esqesq) {
+      let eeA = desenharNo(svg, col1-110, 240, a.esqesq, r);
+      linha(svg, col1-65, 155+r, col1-110, 240-r, '#888');
+    }
+    if (a.esqdir) {
+      let edA = desenharNo(svg, col1-20, 240, a.esqdir, r);
+      linha(svg, col1-65, 155+r, col1-20, 240-r, '#888');
+    }
+  }
+  // filho dir
+  if (a.dir) {
+    let dirA = desenharNo(svg, col1+65, 155, a.dir, r);
+    linha(svg, col1, 70+r, col1+65, 155-r, '#888');
+    if (a.dirdir) {
+      let ddA = desenharNo(svg, col1+110, 240, a.dirdir, r);
+      linha(svg, col1+65, 155+r, col1+110, 240-r, '#888');
+    }
+    if (a.diresq) {
+      let deA = desenharNo(svg, col1+20, 240, a.diresq, r);
+      linha(svg, col1+65, 155+r, col1+20, 240-r, '#888');
+    }
+  }
+  texto(svg, col1, 278, a.info, 'rotulo-fator');
+
+  // ================== DESENHAR DEPOIS ==================
+  const d = c.depois;
+  let raizD = desenharNo(svg, col2, 70, d.raiz, r);
+  if (d.esq) {
+    let esqD = desenharNo(svg, col2-65, 175, d.esq, r);
+    linha(svg, col2, 70+r, col2-65, 175-r, '#3B6D11');
+  }
+  if (d.dir) {
+    let dirD = desenharNo(svg, col2+65, 175, d.dir, r);
+    linha(svg, col2, 70+r, col2+65, 175-r, '#3B6D11');
+  }
+  texto(svg, col2, 278, d.info, 'rotulo-ok');
+}
+
+mostrar('LL');
+</script>

@@ -31,7 +31,14 @@ public class TracePercurso {
     // injeta na árvore
     arvore.raiz = raiz;
 
-    // verifica
+    //ávore montada
+    //         10
+    //        /  \
+    //       5    15
+    //      / \   / \
+    //     3   7 12  20
+
+    System.out.println(arvore.inOrderIterativo());
     System.out.println(arvore.inOrder()); // [3, 5, 7, 10, 12, 15, 20]
     System.out.println(arvore.preOrder()); // [10, 5, 3, 7, 15, 12, 20]
     System.out.println(arvore.postOrder()); // [3, 7, 5, 12, 20, 15, 10]

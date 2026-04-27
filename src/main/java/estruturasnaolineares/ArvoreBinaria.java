@@ -2,6 +2,7 @@ package estruturasnaolineares;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 import java.util.Queue;
 
@@ -258,5 +259,53 @@ public class ArvoreBinaria<T> {
           .append(" -> ").append(no.direito.dado).append(";\n");
       toDotRecursivo(no.direito, sb);
     }
+  }
+
+  // ------------------------------------------------
+  /*
+   * Implemente percurso in-order iterativo usando uma pilha (Stack) explícita,
+   * sem recursão. Compare a implementação com a versão recursiva.
+   */
+  public List<T> inOrderIterativo() {
+    List<T> resultado = new ArrayList<>();
+    if (raiz == null)
+      return resultado;
+
+    Deque<No<T>> pilha = new ArrayDeque<>();
+    No<T> atual = raiz;
+
+    while (atual != null || !pilha.isEmpty()) {
+      // Descer à esquerda o máximo possível
+      while (atual != null) {
+        pilha.push(atual);
+        atual = atual.esquerdo;
+      }
+      // Processar o nó no topo da pilha
+      atual = pilha.pop();
+      resultado.add(atual.dado);
+      // Agora, explorar a subárvore direita
+      atual = atual.direito;
+    }
+
+    return resultado;
+  }
+
+  // Dado o pré-order e o in-order de uma árvore binária (sem repetições),
+  // reconstrua a árvore. Implemente um método estático reconstruir(int[]
+  // preOrder, int[] inOrder).
+
+  public static ArvoreBinaria<Integer> reconstruir(int[] preOrder, int[] inOrder) {
+    ArvoreBinaria<Integer> arvore = new ArvoreBinaria<>();
+
+    arvore.raiz = reconstruirRecursivo(preOrder, 0, preOrder.length - 1, inOrder, 0, inOrder.length - 1);
+    return arvore;
+  }
+
+  private static No<Integer> reconstruirRecursivo(int[] preOrder, int i, int j, int[] inOrder, int k, int l) {
+    if (i > j || k > l)
+      return null;
+    int dado = preOrder[i];
+    No<Integer> no = new No<>(dado);
+
   }
 }
