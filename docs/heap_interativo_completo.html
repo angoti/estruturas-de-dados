@@ -1,449 +1,698 @@
-
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heap Interativo — Estrutura de Dados</title>
 <style>
-* { box-sizing: border-box; }
-body { margin: 0; }
-.container { padding: 1rem 0; font-family: var(--font-sans); }
-.tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; flex-wrap: wrap; }
-.tab { padding: 6px 14px; font-size: 13px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-secondary); cursor: pointer; transition: all .15s; }
-.tab.active { background: var(--color-background-secondary); color: var(--color-text-primary); border-color: var(--color-border-primary); font-weight: 500; }
-.panel { display: none; }
-.panel.active { display: block; }
-.caption { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 1rem; line-height: 1.6; }
-.step-row { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; flex-wrap: wrap; }
-button.action { padding: 7px 16px; font-size: 13px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-primary); cursor: pointer; }
-button.action:hover { background: var(--color-background-secondary); }
-button.action:disabled { opacity: .4; cursor: not-allowed; }
-input.num-input { width: 64px; padding: 6px 8px; font-size: 13px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); text-align: center; }
-.msg { font-size: 13px; color: var(--color-text-secondary); min-height: 20px; margin-top: 4px; }
-.msg.highlight { color: #0F6E56; font-weight: 500; }
-.array-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: flex-end; }
-.array-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-.array-box { width: 38px; height: 38px; border-radius: 6px; border: 0.5px solid var(--color-border-secondary); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; transition: background .3s, border-color .3s; background: var(--color-background-secondary); color: var(--color-text-primary); }
-.array-box.active { background: #E1F5EE; border-color: #1D9E75; color: #085041; }
-.array-box.swap1 { background: #FAEEDA; border-color: #BA7517; color: #412402; }
-.array-box.swap2 { background: #FAEEDA; border-color: #BA7517; color: #412402; }
-.array-box.done { background: #E1F5EE; border-color: #1D9E75; color: #085041; }
-.array-box.removed { background: #FCEBEB; border-color: #A32D2D; color: #501313; }
-.array-idx { font-size: 11px; color: var(--color-text-tertiary); }
-.array-label { font-size: 11px; color: #1D9E75; font-weight: 500; height: 14px; }
-svg.tree-svg { width: 100%; overflow: visible; display: block; }
-.speed-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--color-text-secondary); margin-bottom: 1rem; }
-.speed-row input { flex: 1; max-width: 120px; }
-.formula-box { font-size: 12px; color: var(--color-text-secondary); background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 8px 12px; margin-bottom: 1rem; line-height: 1.8; }
-code { font-family: var(--font-mono); font-size: 12px; background: var(--color-background-tertiary); padding: 1px 5px; border-radius: 4px; }
-</style>
+  /* ── Reset & base ─────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<div class="container">
-<h2 class="sr-only">Visualizador interativo de heap: inserção, remoção, sift-up e buildHeap</h2>
+  :root {
+    --bg:        #f8f7f4;
+    --surface:   #ffffff;
+    --surface2:  #f1efe8;
+    --border:    rgba(0,0,0,0.10);
+    --border2:   rgba(0,0,0,0.18);
+    --text:      #1a1a18;
+    --text2:     #5f5e5a;
+    --text3:     #9a9893;
+
+    --teal-50:  #E1F5EE;
+    --teal-200: #5DCAA5;
+    --teal-600: #0F6E56;
+    --teal-800: #085041;
+
+    --amber-50:  #FAEEDA;
+    --amber-400: #EF9F27;
+    --amber-600: #BA7517;
+    --amber-900: #412402;
+
+    --blue-50:  #E6F1FB;
+    --blue-600: #185FA5;
+    --blue-800: #0C447C;
+
+    --red-50:   #FCEBEB;
+    --red-600:  #A32D2D;
+    --red-800:  #791F1F;
+
+    --gray-100: #D3D1C7;
+    --gray-400: #888780;
+    --gray-800: #2C2C2A;
+
+    --font: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:      #1a1a18;
+      --surface: #242422;
+      --surface2:#2c2c2a;
+      --border:  rgba(255,255,255,0.10);
+      --border2: rgba(255,255,255,0.18);
+      --text:    #e8e6df;
+      --text2:   #9a9893;
+      --text3:   #5f5e5a;
+    }
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Page layout ──────────────────────────────────────────── */
+  .page {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  header { margin-bottom: 2rem; }
+  header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 0.25rem;
+  }
+  header p {
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  /* ── Tabs ─────────────────────────────────────────────────── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+  .tab {
+    padding: 7px 16px;
+    font-size: 13px;
+    font-family: var(--font);
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+    margin-bottom: -1px;
+    border-radius: 0;
+    font-weight: 500;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--teal-600); border-bottom-color: var(--teal-600); }
+
+  /* ── Panel content ────────────────────────────────────────── */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .caption {
+    font-size: 14px;
+    color: var(--text2);
+    margin-bottom: 1rem;
+    line-height: 1.7;
+  }
+  strong { font-weight: 600; color: var(--text); }
+
+  .formula-box {
+    font-size: 13px;
+    color: var(--text2);
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin-bottom: 1.25rem;
+    line-height: 2;
+    border: 1px solid var(--border);
+  }
+  code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--bg);
+    padding: 2px 6px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    color: var(--teal-600);
+  }
+
+  /* ── Controls ─────────────────────────────────────────────── */
+  .step-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  input.num-input {
+    width: 68px;
+    padding: 7px 10px;
+    font-size: 14px;
+    font-family: var(--font);
+    border-radius: var(--radius);
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    color: var(--text);
+    text-align: center;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input.num-input:focus { border-color: var(--teal-200); }
+
+  button.action {
+    padding: 7px 16px;
+    font-size: 13px;
+    font-family: var(--font);
+    font-weight: 500;
+    border-radius: var(--radius);
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: background .15s, border-color .15s, transform .08s;
+  }
+  button.action:hover:not(:disabled) { background: var(--surface2); border-color: var(--border2); }
+  button.action:active:not(:disabled) { transform: scale(0.97); }
+  button.action:disabled { opacity: .38; cursor: not-allowed; }
+  button.action.primary {
+    background: var(--teal-50);
+    border-color: var(--teal-200);
+    color: var(--teal-800);
+  }
+  button.action.primary:hover:not(:disabled) {
+    background: var(--teal-200);
+  }
+
+  .msg {
+    font-size: 13px;
+    color: var(--text2);
+    min-height: 22px;
+    margin-bottom: 1rem;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    transition: background .25s;
+  }
+  .msg.ok {
+    background: var(--teal-50);
+    color: var(--teal-800);
+    border-color: var(--teal-200);
+  }
+
+  /* ── Array display ────────────────────────────────────────── */
+  .array-row {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    align-items: flex-end;
+  }
+  .array-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .array-label {
+    font-size: 10px;
+    font-weight: 600;
+    height: 14px;
+    color: var(--teal-600);
+    font-family: var(--mono);
+  }
+  .array-box {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 600;
+    transition: background .3s, border-color .3s, color .3s;
+    background: var(--surface2);
+    color: var(--text);
+  }
+  .array-box.active  { background: var(--teal-50);  border-color: var(--teal-200);  color: var(--teal-800); }
+  .array-box.swap    { background: var(--amber-50); border-color: var(--amber-400); color: var(--amber-900); }
+  .array-box.done    { background: var(--teal-50);  border-color: var(--teal-600);  color: var(--teal-800); }
+  .array-box.removed { background: var(--red-50);   border-color: var(--red-600);   color: var(--red-800); }
+  .array-idx {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: var(--mono);
+  }
+
+  /* ── SVG tree ─────────────────────────────────────────────── */
+  .tree-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem 0.5rem 0.5rem;
+    overflow: hidden;
+  }
+  svg.tree-svg {
+    width: 100%;
+    display: block;
+    overflow: visible;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <h1>Heap — Visualizador Interativo</h1>
+  <p>Min-heap implementado em array · IFTM — Estrutura de Dados 2026/1</p>
+</header>
 
 <div class="tabs">
   <button class="tab active" onclick="switchTab('insert')">Inserção + sift-up</button>
   <button class="tab" onclick="switchTab('remove')">Remoção do topo</button>
-  <button class="tab" onclick="switchTab('build')">BuildHeap O(n)</button>
+  <button class="tab" onclick="switchTab('build')">BuildHeap Θ(n)</button>
   <button class="tab" onclick="switchTab('index')">Índices pai-filho</button>
 </div>
 
 <!-- PAINEL 1: INSERÇÃO -->
 <div id="panel-insert" class="panel active">
-  <p class="caption">O novo elemento é inserido no final do array. Depois, o <strong>sift-up</strong> compara o nó com seu pai repetidamente e sobe enquanto for menor.</p>
-  <div class="formula-box">pai(i) = ⌊(i − 1) / 2⌋ &nbsp;|&nbsp; filho esq = 2i+1 &nbsp;|&nbsp; filho dir = 2i+2</div>
+  <p class="caption">O novo elemento é inserido no final do array. Depois, o <strong>sift-up</strong> compara o nó com seu pai repetidamente e sobe enquanto for menor (propriedade min-heap).</p>
+  <div class="formula-box">
+    pai(i) = <code>⌊(i − 1) / 2⌋</code> &nbsp;·&nbsp;
+    filho esq = <code>2i + 1</code> &nbsp;·&nbsp;
+    filho dir = <code>2i + 2</code>
+  </div>
   <div class="step-row">
     <input type="number" id="ins-val" class="num-input" value="2" min="1" max="99">
-    <button class="action" onclick="insertValue()">Inserir</button>
+    <button class="action primary" onclick="insertValue()">Inserir</button>
     <button class="action" onclick="resetInsert()">Resetar</button>
-    <button class="action" onclick="stepInsert()" id="btn-step-ins" disabled>Próximo passo</button>
+    <button class="action" onclick="stepInsert()" id="btn-step-ins" disabled>Próximo passo ›</button>
   </div>
   <div class="msg" id="ins-msg">Insira um valor para começar.</div>
   <div class="array-row" id="ins-array"></div>
-  <svg class="tree-svg" id="ins-svg" viewBox="0 0 620 280"></svg>
+  <div class="tree-wrap"><svg class="tree-svg" id="ins-svg" viewBox="0 0 680 260"></svg></div>
 </div>
 
 <!-- PAINEL 2: REMOÇÃO -->
 <div id="panel-remove" class="panel">
   <p class="caption">A raiz (mínimo) é removida. O último elemento ocupa a raiz. O <strong>sift-down</strong> desce o nó trocando-o com o menor filho até restaurar a propriedade heap.</p>
   <div class="step-row">
-    <button class="action" onclick="removeTop()">Remover topo</button>
+    <button class="action primary" onclick="removeTop()">Remover topo</button>
     <button class="action" onclick="resetRemove()">Resetar</button>
-    <button class="action" onclick="stepRemove()" id="btn-step-rem" disabled>Próximo passo</button>
+    <button class="action" onclick="stepRemove()" id="btn-step-rem" disabled>Próximo passo ›</button>
   </div>
   <div class="msg" id="rem-msg">Clique em "Remover topo" para iniciar.</div>
   <div class="array-row" id="rem-array"></div>
-  <svg class="tree-svg" id="rem-svg" viewBox="0 0 620 280"></svg>
+  <div class="tree-wrap"><svg class="tree-svg" id="rem-svg" viewBox="0 0 680 260"></svg></div>
 </div>
 
 <!-- PAINEL 3: BUILHEAP -->
 <div id="panel-build" class="panel">
-  <p class="caption"><strong>BuildHeap</strong> parte de um array arbitrário e aplica sift-down de baixo para cima, começando pelo último nó interno ⌊n/2⌋−1. Custo: Θ(n), não O(n log n).</p>
+  <p class="caption"><strong>BuildHeap</strong> parte de um array arbitrário e aplica sift-down de baixo para cima, começando pelo último nó interno <code>⌊n/2⌋ − 1</code>. Custo total: Θ(n) — não O(n log n).</p>
   <div class="step-row">
-    <button class="action" onclick="startBuild()">Iniciar buildHeap</button>
+    <button class="action primary" onclick="startBuild()">Iniciar buildHeap</button>
     <button class="action" onclick="resetBuild()">Resetar</button>
-    <button class="action" onclick="stepBuild()" id="btn-step-bld" disabled>Próximo passo</button>
+    <button class="action" onclick="stepBuild()" id="btn-step-bld" disabled>Próximo passo ›</button>
   </div>
-  <div class="msg" id="bld-msg">O array inicial está desordenado. Clique para iniciar.</div>
+  <div class="msg" id="bld-msg">Array inicial desordenado. Clique para iniciar.</div>
   <div class="array-row" id="bld-array"></div>
-  <svg class="tree-svg" id="bld-svg" viewBox="0 0 620 300"></svg>
+  <div class="tree-wrap"><svg class="tree-svg" id="bld-svg" viewBox="0 0 680 280"></svg></div>
 </div>
 
 <!-- PAINEL 4: ÍNDICES -->
 <div id="panel-index" class="panel">
-  <p class="caption">Clique em qualquer nó para ver as relações pai-filho calculadas apenas por aritmética de índice — sem ponteiros, sem memória extra. É isso que permite armazenar o heap em um array simples.</p>
+  <p class="caption">Clique em qualquer nó para ver as relações pai-filho calculadas apenas por aritmética de índice — sem ponteiros, sem memória extra.</p>
   <div class="formula-box">
-    Para o nó de índice <code>i</code>:<br>
-    pai = <code>⌊(i − 1) / 2⌋</code> &nbsp;·&nbsp; filho esquerdo = <code>2i + 1</code> &nbsp;·&nbsp; filho direito = <code>2i + 2</code><br>
-    Folhas: índices <code>⌊n/2⌋</code> até <code>n−1</code>
+    Nó de índice <code>i</code> &nbsp;→&nbsp;
+    pai = <code>⌊(i − 1) / 2⌋</code> &nbsp;·&nbsp;
+    filho esq = <code>2i + 1</code> &nbsp;·&nbsp;
+    filho dir = <code>2i + 2</code><br>
+    Folhas: índices <code>⌊n/2⌋</code> até <code>n − 1</code>
   </div>
-  <div class="msg" id="idx-msg">Selecione um nó.</div>
-  <svg class="tree-svg" id="idx-svg" viewBox="0 0 620 300" style="cursor:pointer"></svg>
+  <div class="msg" id="idx-msg">Clique em um nó para ver as relações.</div>
+  <div class="tree-wrap"><svg class="tree-svg" id="idx-svg" viewBox="0 0 680 290" style="cursor:pointer"></svg></div>
 </div>
-</div>
+
+</div><!-- .page -->
 
 <script>
-const HEAP_COLORS = {
-  normal:  { fill: '#F1EFE8', stroke: '#B4B2A9', text: '#2C2C2A' },
-  active:  { fill: '#E1F5EE', stroke: '#1D9E75', text: '#04342C' },
-  swap:    { fill: '#FAEEDA', stroke: '#BA7517', text: '#412402' },
-  done:    { fill: '#E1F5EE', stroke: '#0F6E56', text: '#04342C' },
-  removed: { fill: '#FCEBEB', stroke: '#A32D2D', text: '#501313' },
-  parent:  { fill: '#E6F1FB', stroke: '#185FA5', text: '#042C53' },
-  child:   { fill: '#FAEEDA', stroke: '#BA7517', text: '#412402' },
-  self:    { fill: '#E1F5EE', stroke: '#1D9E75', text: '#04342C' },
+// ── Paleta de cores para os nós da árvore ─────────────────────────────────
+const C = {
+  normal:  { fill:'#f1efe8', stroke:'#b4b2a9', text:'#2c2c2a' },
+  active:  { fill:'#E1F5EE', stroke:'#1D9E75', text:'#04342C' },
+  swap:    { fill:'#FAEEDA', stroke:'#EF9F27', text:'#412402' },
+  done:    { fill:'#E1F5EE', stroke:'#0F6E56', text:'#04342C' },
+  removed: { fill:'#FCEBEB', stroke:'#A32D2D', text:'#791F1F' },
+  parent:  { fill:'#E6F1FB', stroke:'#185FA5', text:'#042C53' },
+  child:   { fill:'#FAEEDA', stroke:'#BA7517', text:'#412402' },
+  leaf:    { fill:'#f8f7f4', stroke:'#c8c6bc', text:'#5f5e5a' },
 };
 
-// ─── layout helpers ──────────────────────────────────────────────────────────
-function nodePositions(n, W=600, startX=10) {
-  const positions = [];
-  const levels = Math.floor(Math.log2(n)) + 1;
-  const levelH = 62;
+// Detectar dark mode e ajustar cores base
+function isDark() { return window.matchMedia('(prefers-color-scheme: dark)').matches; }
+function normalColor() {
+  return isDark()
+    ? { fill:'#2c2c2a', stroke:'#5f5e5a', text:'#d3d1c7' }
+    : C.normal;
+}
+
+// ── Posições dos nós na árvore ────────────────────────────────────────────
+function nodePositions(n, W=660, ox=10) {
+  const pos = [];
   for (let i = 0; i < n; i++) {
     const level = Math.floor(Math.log2(i + 1));
     const levelStart = Math.pow(2, level) - 1;
     const posInLevel = i - levelStart;
     const totalInLevel = Math.pow(2, level);
-    const x = startX + (W / totalInLevel) * (posInLevel + 0.5);
-    const y = 36 + level * levelH;
-    positions.push({ x, y });
+    const x = ox + (W / totalInLevel) * (posInLevel + 0.5);
+    const y = 36 + level * 66;
+    pos.push({ x, y });
   }
-  return positions;
+  return pos;
 }
 
-function svgNode(x, y, val, color, idx, label='') {
-  const c = HEAP_COLORS[color] || HEAP_COLORS.normal;
-  let extra = label ? `<text x="${x}" y="${y+28}" text-anchor="middle" font-size="10" fill="${c.stroke}" font-family="var(--font-sans)">${label}</text>` : '';
+function svgNode(x, y, val, color, idx, sublabel) {
+  const nc = C[color] || normalColor();
+  const sub = sublabel
+    ? `<text x="${x}" y="${y+30}" text-anchor="middle" font-size="10"
+         fill="${nc.stroke}" font-family="'DM Sans',system-ui,sans-serif">${sublabel}</text>`
+    : '';
   return `<g>
-    <circle cx="${x}" cy="${y}" r="20" fill="${c.fill}" stroke="${c.stroke}" stroke-width="1.5"/>
-    <text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="${c.text}" font-family="var(--font-sans)">${val}</text>
-    <text x="${x}" y="${y-24}" text-anchor="middle" font-size="10" fill="var(--color-text-tertiary)" font-family="var(--font-sans)">i=${idx}</text>
-    ${extra}
+    <circle cx="${x}" cy="${y}" r="22" fill="${nc.fill}" stroke="${nc.stroke}" stroke-width="1.5"/>
+    <text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central"
+      font-size="15" font-weight="600" fill="${nc.text}"
+      font-family="'DM Sans',system-ui,sans-serif">${val}</text>
+    <text x="${x}" y="${y-28}" text-anchor="middle"
+      font-size="10" fill="#9a9893"
+      font-family="'JetBrains Mono',monospace">i=${idx}</text>
+    ${sub}
   </g>`;
 }
 
-function svgEdge(x1, y1, x2, y2) {
-  return `<line x1="${x1}" y1="${y1+20}" x2="${x2}" y2="${y2-20}" stroke="var(--color-border-secondary)" stroke-width="1"/>`;
-}
-
-function renderTree(svgId, heap, colorMap={}, labelMap={}) {
+function renderTree(svgId, heap, colorMap, labelMap) {
   const el = document.getElementById(svgId);
-  if (!el) return;
-  const n = heap.length;
-  if (n === 0) { el.innerHTML = ''; return; }
-  const pos = nodePositions(n);
+  if (!el || !heap.length) { if(el) el.innerHTML=''; return; }
+  const pos = nodePositions(heap.length);
   let html = '';
-  // edges first
-  for (let i = 1; i < n; i++) {
+  // arestas
+  for (let i = 1; i < heap.length; i++) {
     const p = Math.floor((i-1)/2);
-    html += svgEdge(pos[p].x, pos[p].y, pos[i].x, pos[i].y);
+    const isActive = colorMap[p] === 'active' && (colorMap[i] === 'swap' || colorMap[i] === 'child' || colorMap[i] === 'parent');
+    html += `<line x1="${pos[p].x}" y1="${pos[p].y+22}"
+                   x2="${pos[i].x}" y2="${pos[i].y-22}"
+                   stroke="${isActive ? '#1D9E75' : '#d3d1c7'}"
+                   stroke-width="${isActive ? 1.8 : 1}"/>`;
   }
-  // nodes
-  for (let i = 0; i < n; i++) {
-    const color = colorMap[i] || 'normal';
-    const label = labelMap[i] || '';
-    html += svgNode(pos[i].x, pos[i].y, heap[i], color, i, label);
+  // nós
+  for (let i = 0; i < heap.length; i++) {
+    html += svgNode(pos[i].x, pos[i].y, heap[i], colorMap[i]||'normal', i, labelMap?.[i]||'');
   }
   el.innerHTML = html;
 }
 
-function renderArray(arrId, heap, colorMap={}, labelMap={}) {
+function renderArray(arrId, heap, colorMap, labelMap) {
   const el = document.getElementById(arrId);
   if (!el) return;
   el.innerHTML = heap.map((v, i) => {
-    const cls = colorMap[i] || '';
-    const lbl = labelMap[i] || '';
+    const cls = { active:'active', swap:'swap', done:'done', removed:'removed' }[colorMap[i]] || '';
     return `<div class="array-cell">
-      <div class="array-label">${lbl}</div>
+      <div class="array-label">${labelMap?.[i] || ''}</div>
       <div class="array-box ${cls}">${v}</div>
       <div class="array-idx">[${i}]</div>
     </div>`;
   }).join('');
 }
 
-function setMsg(id, text, hi=false) {
+function setMsg(id, text, ok=false) {
   const el = document.getElementById(id);
   el.textContent = text;
-  el.className = 'msg' + (hi ? ' highlight' : '');
+  el.className = 'msg' + (ok ? ' ok' : '');
 }
 
-// ─── TAB SWITCHER ─────────────────────────────────────────────────────────────
+// ── Tab switcher ──────────────────────────────────────────────────────────
 function switchTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i) => {
-    const names = ['insert','remove','build','index'];
-    t.classList.toggle('active', names[i] === name);
-  });
+  const names = ['insert','remove','build','index'];
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===name));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
 }
 
-// ─── PANEL 1: INSERÇÃO ────────────────────────────────────────────────────────
+// ── PAINEL 1: INSERÇÃO ────────────────────────────────────────────────────
 let insHeap = [5, 9, 12, 18, 21];
-let insSteps = [];
-let insStepIdx = 0;
+let insSteps = [], insIdx = 0;
 
 function resetInsert() {
   insHeap = [5, 9, 12, 18, 21];
-  insSteps = [];
-  insStepIdx = 0;
+  insSteps = []; insIdx = 0;
   document.getElementById('btn-step-ins').disabled = true;
   setMsg('ins-msg', 'Insira um valor para começar.');
-  renderArray('ins-array', insHeap, {}, {0: 'raiz (mín)'});
-  renderTree('ins-svg', insHeap, {}, {});
+  renderArray('ins-array', insHeap, {}, {0:'raiz (mín)'});
+  renderTree('ins-svg', insHeap, {}, {0:'raiz'});
 }
 
 function insertValue() {
+  if (insHeap.length >= 15) { setMsg('ins-msg', 'Heap cheio. Clique em Resetar.'); return; }
   const v = parseInt(document.getElementById('ins-val').value);
   if (isNaN(v)) return;
   insHeap.push(v);
-  // gerar passos do sift-up
   insSteps = [];
   let i = insHeap.length - 1;
-  insSteps.push({ heap: [...insHeap], cur: i, par: Math.floor((i-1)/2), action: 'inserted', msg: `Valor ${v} inserido na posição [${i}]. Comparando com pai [${Math.floor((i-1)/2)}] = ${insHeap[Math.floor((i-1)/2)]}.` });
+  const par0 = Math.floor((i-1)/2);
+  insSteps.push({ heap:[...insHeap], cur:i, par:par0, action:'inserted',
+    msg:`${v} inserido em [${i}]. Comparando com pai [${par0}] = ${insHeap[par0]}.` });
   while (i > 0) {
     const p = Math.floor((i-1)/2);
     if (insHeap[i] < insHeap[p]) {
       [insHeap[i], insHeap[p]] = [insHeap[p], insHeap[i]];
-      insSteps.push({ heap: [...insHeap], cur: p, par: Math.floor((p-1)/2), action: 'swap', swapA: i, swapB: p, msg: `${insHeap[p]} < ${insHeap[i]} → trocando [${p}] ↔ [${i}]. Novo pai = [${Math.floor((p-1)/2)}].` });
+      const np = Math.floor((p-1)/2);
+      insSteps.push({ heap:[...insHeap], cur:p, par:np>=0?np:-1,
+        swapA:i, swapB:p, action:'swap',
+        msg:`${insHeap[p]} < ${insHeap[i]} → trocando [${p}] ↔ [${i}].${p>0?' Subindo para ['+p+']...':' Chegou à raiz.'}` });
       i = p;
     } else {
-      insSteps.push({ heap: [...insHeap], cur: i, par: p, action: 'stop', msg: `${insHeap[i]} ≥ ${insHeap[p]} → propriedade heap restaurada.` });
+      insSteps.push({ heap:[...insHeap], cur:i, par:p, action:'stop',
+        msg:`${insHeap[i]} ≥ pai ${insHeap[p]} → propriedade heap restaurada. Sift-up concluído.` });
       break;
     }
   }
-  if (i === 0) insSteps.push({ heap: [...insHeap], cur: 0, par: -1, action: 'stop', msg: 'Nó chegou à raiz. Sift-up concluído.' });
-  insStepIdx = 0;
+  if (i === 0 && insSteps[insSteps.length-1].action !== 'stop')
+    insSteps.push({ heap:[...insHeap], cur:0, action:'stop', msg:'Nó chegou à raiz. Sift-up concluído.' });
+  insIdx = 0;
   document.getElementById('btn-step-ins').disabled = false;
   showInsStep(0);
 }
 
 function showInsStep(idx) {
   const s = insSteps[idx];
-  const colorMap = {};
-  if (s.action === 'inserted') { colorMap[s.cur] = 'active'; if (s.par >= 0) colorMap[s.par] = 'parent'; }
-  else if (s.action === 'swap') { colorMap[s.swapA] = 'swap'; colorMap[s.swapB] = 'swap'; }
-  else { colorMap[s.cur] = 'done'; }
-  const labelMap = { 0: 'raiz (mín)' };
-  const labelArr = {};
-  if (s.action === 'inserted') { labelArr[s.cur] = 'novo'; }
-  else if (s.action === 'swap') { labelArr[s.swapA] = '↕'; labelArr[s.swapB] = '↕'; }
-  renderArray('ins-array', s.heap, Object.fromEntries(Object.entries(colorMap).map(([k,v]) => [k, v==='active'?'active':v==='swap'?'swap1':v==='done'?'done':''])), labelArr);
-  renderTree('ins-svg', s.heap, colorMap, labelMap);
-  setMsg('ins-msg', `Passo ${idx+1}/${insSteps.length}: ${s.msg}`, s.action === 'stop');
-  document.getElementById('btn-step-ins').disabled = idx >= insSteps.length - 1;
+  const cm = {}, lm = {0:'raiz (mín)'};
+  if (s.action==='inserted') { cm[s.cur]='active'; if(s.par>=0) cm[s.par]='parent'; }
+  else if (s.action==='swap') { cm[s.swapA]='swap'; cm[s.swapB]='swap'; }
+  else { cm[s.cur]='done'; }
+  renderArray('ins-array', s.heap, cm, {});
+  renderTree('ins-svg', s.heap, cm, lm);
+  setMsg('ins-msg', `Passo ${idx+1}/${insSteps.length}: ${s.msg}`, s.action==='stop');
+  document.getElementById('btn-step-ins').disabled = idx >= insSteps.length-1;
 }
 
-function stepInsert() {
-  if (insStepIdx < insSteps.length - 1) { insStepIdx++; showInsStep(insStepIdx); }
-}
+function stepInsert() { if(insIdx < insSteps.length-1) showInsStep(++insIdx); }
 
-// ─── PANEL 2: REMOÇÃO ─────────────────────────────────────────────────────────
+// ── PAINEL 2: REMOÇÃO ─────────────────────────────────────────────────────
 let remHeap = [1, 3, 2, 7, 5, 8, 4];
-let remSteps = [];
-let remStepIdx = 0;
+let remSteps = [], remIdx = 0;
 
 function resetRemove() {
   remHeap = [1, 3, 2, 7, 5, 8, 4];
-  remSteps = [];
-  remStepIdx = 0;
+  remSteps = []; remIdx = 0;
   document.getElementById('btn-step-rem').disabled = true;
   setMsg('rem-msg', 'Clique em "Remover topo" para iniciar.');
-  renderArray('rem-array', remHeap, {0:'done'}, {0:'raiz (mín)'});
+  renderArray('rem-array', remHeap, {0:'active'}, {0:'raiz (mín)'});
   renderTree('rem-svg', remHeap, {0:'active'}, {0:'raiz'});
 }
 
 function removeTop() {
-  if (remHeap.length === 0) { setMsg('rem-msg', 'Heap vazio!'); return; }
+  if (!remHeap.length) { setMsg('rem-msg', 'Heap vazio!'); return; }
   remSteps = [];
   const removed = remHeap[0];
-  remSteps.push({ heap: [...remHeap], cur: 0, action: 'mark', msg: `Raiz ${removed} será removida. Último elemento [${remHeap.length-1}] = ${remHeap[remHeap.length-1]} sobe para a raiz.` });
+  const last = remHeap[remHeap.length-1];
+  remSteps.push({ heap:[...remHeap], cur:0, action:'mark',
+    msg:`Raiz ${removed} será removida. Último nó [${remHeap.length-1}]=${last} subirá para a raiz.` });
   remHeap[0] = remHeap.pop();
-  remSteps.push({ heap: [...remHeap], cur: 0, action: 'placed', msg: `${remHeap[0]} colocado na raiz [0]. Iniciando sift-down.` });
+  remSteps.push({ heap:[...remHeap], cur:0, action:'placed',
+    msg:`${remHeap[0]} colocado em [0]. Iniciando sift-down.` });
   let i = 0;
   while (true) {
-    const left = 2*i+1, right = 2*i+2;
-    let smallest = i;
-    if (left < remHeap.length && remHeap[left] < remHeap[smallest]) smallest = left;
-    if (right < remHeap.length && remHeap[right] < remHeap[smallest]) smallest = right;
-    if (smallest === i) {
-      remSteps.push({ heap: [...remHeap], cur: i, action: 'stop', msg: `${remHeap[i]} ≤ todos os filhos → heap restaurado.` });
+    const l=2*i+1, r=2*i+2;
+    let sm=i;
+    if (l<remHeap.length && remHeap[l]<remHeap[sm]) sm=l;
+    if (r<remHeap.length && remHeap[r]<remHeap[sm]) sm=r;
+    if (sm===i) {
+      remSteps.push({ heap:[...remHeap], cur:i, action:'stop',
+        msg:`${remHeap[i]} ≤ todos os filhos. Heap restaurado.` });
       break;
     }
-    remSteps.push({ heap: [...remHeap], cur: i, swapA: i, swapB: smallest, action: 'swap', msg: `${remHeap[i]} > ${remHeap[smallest]} (filho [${smallest}]) → trocando.` });
-    [remHeap[i], remHeap[smallest]] = [remHeap[smallest], remHeap[i]];
-    i = smallest;
+    remSteps.push({ heap:[...remHeap], swapA:i, swapB:sm, action:'swap',
+      msg:`[${i}]=${remHeap[i]} > [${sm}]=${remHeap[sm]} (menor filho) → trocando.` });
+    [remHeap[i], remHeap[sm]] = [remHeap[sm], remHeap[i]];
+    i = sm;
   }
-  remStepIdx = 0;
+  remIdx = 0;
   document.getElementById('btn-step-rem').disabled = false;
   showRemStep(0);
 }
 
 function showRemStep(idx) {
   const s = remSteps[idx];
-  const colorMap = {};
-  const labelMap = { 0: 'raiz (mín)' };
-  if (s.action === 'mark') { colorMap[s.cur] = 'removed'; }
-  else if (s.action === 'placed') { colorMap[s.cur] = 'active'; }
-  else if (s.action === 'swap') { colorMap[s.swapA] = 'swap'; colorMap[s.swapB] = 'swap'; }
-  else { colorMap[s.cur] = 'done'; }
-  const labelArr = {};
-  renderArray('rem-array', s.heap, Object.fromEntries(Object.entries(colorMap).map(([k,v]) => [k, v==='swap'?'swap1':v==='done'?'done':v==='active'?'active':''])), labelArr);
-  renderTree('rem-svg', s.heap, colorMap, labelMap);
-  setMsg('rem-msg', `Passo ${idx+1}/${remSteps.length}: ${s.msg}`, s.action === 'stop');
-  document.getElementById('btn-step-rem').disabled = idx >= remSteps.length - 1;
+  const cm = {}, lm = {0:'raiz (mín)'};
+  if (s.action==='mark')   cm[0]='removed';
+  else if (s.action==='placed') cm[0]='active';
+  else if (s.action==='swap')  { cm[s.swapA]='swap'; cm[s.swapB]='swap'; }
+  else cm[s.cur]='done';
+  renderArray('rem-array', s.heap, cm, {});
+  renderTree('rem-svg', s.heap, cm, lm);
+  setMsg('rem-msg', `Passo ${idx+1}/${remSteps.length}: ${s.msg}`, s.action==='stop');
+  document.getElementById('btn-step-rem').disabled = idx >= remSteps.length-1;
 }
 
-function stepRemove() {
-  if (remStepIdx < remSteps.length - 1) { remStepIdx++; showRemStep(remStepIdx); }
-}
+function stepRemove() { if(remIdx < remSteps.length-1) showRemStep(++remIdx); }
 
-// ─── PANEL 3: BUILHEAP ────────────────────────────────────────────────────────
-const BUILD_INITIAL = [9, 4, 7, 1, 8, 3, 6];
-let bldHeap = [...BUILD_INITIAL];
-let bldSteps = [];
-let bldStepIdx = 0;
+// ── PAINEL 3: BUILHEAP ────────────────────────────────────────────────────
+const BLD_INIT = [9, 4, 7, 1, 8, 3, 6];
+let bldHeap = [...BLD_INIT], bldSteps = [], bldIdx = 0;
 
 function resetBuild() {
-  bldHeap = [...BUILD_INITIAL];
-  bldSteps = [];
-  bldStepIdx = 0;
+  bldHeap = [...BLD_INIT]; bldSteps = []; bldIdx = 0;
   document.getElementById('btn-step-bld').disabled = true;
   setMsg('bld-msg', 'Array desordenado. Clique em "Iniciar buildHeap".');
+  const lm = {};
+  const lastInt = Math.floor(BLD_INIT.length/2)-1;
+  BLD_INIT.forEach((_,i) => { if(i>lastInt) lm[i]='folha'; });
   renderArray('bld-array', bldHeap, {}, {});
-  renderTree('bld-svg', bldHeap, {}, {});
+  renderTree('bld-svg', bldHeap, Object.fromEntries(Object.keys(lm).map(k=>[k,'leaf'])), lm);
 }
 
-function startBuild() {
-  bldHeap = [...BUILD_INITIAL];
-  bldSteps = [];
-  const n = bldHeap.length;
-  const startIdx = Math.floor(n/2) - 1;
-  bldSteps.push({ heap: [...bldHeap], cur: -1, action: 'start', msg: `n=${n}. Último nó interno: ⌊${n}/2⌋−1 = ${startIdx}. Começando sift-down de [${startIdx}] até [0].` });
-  for (let root = startIdx; root >= 0; root--) {
-    siftDownWithSteps(bldHeap, root, bldSteps);
-  }
-  bldSteps.push({ heap: [...bldHeap], cur: -1, action: 'done', msg: 'BuildHeap concluído! Todo nó satisfaz a propriedade heap.' });
-  bldStepIdx = 0;
-  document.getElementById('btn-step-bld').disabled = false;
-  showBldStep(0);
-}
-
-function siftDownWithSteps(arr, i, steps) {
+function siftDownSteps(arr, i, steps) {
   const n = arr.length;
   while (true) {
-    const l = 2*i+1, r = 2*i+2;
-    let sm = i;
-    if (l < n && arr[l] < arr[sm]) sm = l;
-    if (r < n && arr[r] < arr[sm]) sm = r;
-    if (sm === i) {
-      steps.push({ heap: [...arr], cur: i, action: 'ok', msg: `[${i}]=${arr[i]} já satisfaz heap (menor que filhos).` });
+    const l=2*i+1, r=2*i+2; let sm=i;
+    if (l<n && arr[l]<arr[sm]) sm=l;
+    if (r<n && arr[r]<arr[sm]) sm=r;
+    if (sm===i) {
+      steps.push({ heap:[...arr], cur:i, action:'ok',
+        msg:`[${i}]=${arr[i]} já satisfaz heap.` });
       break;
     }
-    steps.push({ heap: [...arr], cur: i, swapA: i, swapB: sm, action: 'swap', msg: `[${i}]=${arr[i]} > [${sm}]=${arr[sm]} → trocando.` });
+    steps.push({ heap:[...arr], swapA:i, swapB:sm, action:'swap',
+      msg:`[${i}]=${arr[i]} > filho [${sm}]=${arr[sm]} → trocando.` });
     [arr[i], arr[sm]] = [arr[sm], arr[i]];
     i = sm;
   }
 }
 
+function startBuild() {
+  bldHeap = [...BLD_INIT]; bldSteps = [];
+  const n = bldHeap.length, si = Math.floor(n/2)-1;
+  bldSteps.push({ heap:[...bldHeap], cur:-1, action:'start',
+    msg:`n=${n}. Último nó interno = ⌊${n}/2⌋−1 = ${si}. Aplicando sift-down de [${si}] até [0].` });
+  for (let r=si; r>=0; r--) siftDownSteps(bldHeap, r, bldSteps);
+  bldSteps.push({ heap:[...bldHeap], cur:-1, action:'done',
+    msg:'BuildHeap concluído! Todo nó é ≤ seus filhos.' });
+  bldIdx = 0;
+  document.getElementById('btn-step-bld').disabled = false;
+  showBldStep(0);
+}
+
 function showBldStep(idx) {
   const s = bldSteps[idx];
-  const colorMap = {};
-  if (s.action === 'swap') { colorMap[s.swapA] = 'swap'; colorMap[s.swapB] = 'swap'; }
-  else if (s.action === 'ok' || s.action === 'done') {
-    if (s.cur >= 0) colorMap[s.cur] = 'done';
-    if (s.action === 'done') s.heap.forEach((_,i) => colorMap[i] = 'done');
-  }
-  else if (s.cur >= 0) colorMap[s.cur] = 'active';
-  const lastInternalIdx = Math.floor(BUILD_INITIAL.length/2) - 1;
-  const labelMap = {};
-  s.heap.forEach((_,i) => { if (i > lastInternalIdx) labelMap[i] = 'folha'; });
-  renderArray('bld-array', s.heap, Object.fromEntries(Object.entries(colorMap).map(([k,v]) => [k, v==='swap'?'swap1':v==='done'?'done':v==='active'?'active':''])), {});
-  renderTree('bld-svg', s.heap, colorMap, labelMap);
-  setMsg('bld-msg', `Passo ${idx+1}/${bldSteps.length}: ${s.msg}`, s.action === 'done' || s.action === 'ok');
-  document.getElementById('btn-step-bld').disabled = idx >= bldSteps.length - 1;
+  const cm = {}, lm = {};
+  const lastInt = Math.floor(BLD_INIT.length/2)-1;
+  s.heap.forEach((_,i) => { if(i>lastInt) { cm[i]='leaf'; lm[i]='folha'; } });
+  if (s.action==='swap') { cm[s.swapA]='swap'; cm[s.swapB]='swap'; delete lm[s.swapA]; delete lm[s.swapB]; }
+  else if (s.action==='ok') { cm[s.cur]='done'; }
+  else if (s.action==='done') s.heap.forEach((_,i) => { cm[i]='done'; lm[i]=''; });
+  renderArray('bld-array', s.heap, cm, {});
+  renderTree('bld-svg', s.heap, cm, lm);
+  setMsg('bld-msg', `Passo ${idx+1}/${bldSteps.length}: ${s.msg}`, s.action==='done'||s.action==='ok');
+  document.getElementById('btn-step-bld').disabled = idx >= bldSteps.length-1;
 }
 
-function stepBuild() {
-  if (bldStepIdx < bldSteps.length - 1) { bldStepIdx++; showBldStep(bldStepIdx); }
-}
+function stepBuild() { if(bldIdx < bldSteps.length-1) showBldStep(++bldIdx); }
 
-// ─── PANEL 4: ÍNDICES ─────────────────────────────────────────────────────────
+// ── PAINEL 4: ÍNDICES ─────────────────────────────────────────────────────
 const IDX_HEAP = [1, 3, 2, 7, 5, 8, 4, 11, 9];
-let selectedIdx = -1;
 
-function renderIndexPanel(selected) {
-  const heap = IDX_HEAP;
-  const n = heap.length;
+function renderIndexSvg(selected) {
+  const n = IDX_HEAP.length;
   const pos = nodePositions(n);
-  const colorMap = {};
-  const labelMap = { 0: 'raiz' };
-  const labelLines = [];
-
-  if (selected >= 0 && selected < n) {
-    colorMap[selected] = 'active';
-    labelMap[selected] = 'i=' + selected;
-    const par = Math.floor((selected-1)/2);
-    const left = 2*selected+1;
-    const right = 2*selected+2;
-    if (selected > 0) { colorMap[par] = 'parent'; labelMap[par] = 'pai'; }
-    if (left < n) { colorMap[left] = 'child'; labelMap[left] = 'esq'; }
-    if (right < n) { colorMap[right] = 'child'; labelMap[right] = 'dir'; }
-
-    let msg = `Nó [${selected}] = ${heap[selected]}`;
-    if (selected > 0) msg += ` · pai=[${par}]=${heap[par]}`;
-    if (left < n) msg += ` · esq=[${left}]=${heap[left]}`;
-    if (right < n) msg += ` · dir=[${right}]=${heap[right]}`;
-    if (left >= n) msg += ` · sem filhos (folha)`;
-    setMsg('idx-msg', msg);
-  }
-
-  const svgEl = document.getElementById('idx-svg');
   let html = '';
-  for (let i = 1; i < n; i++) {
+  // arestas
+  for (let i=1; i<n; i++) {
     const p = Math.floor((i-1)/2);
-    let edgeColor = 'var(--color-border-secondary)';
-    let edgeW = 1;
-    if (selected >= 0) {
-      if ((i === selected && p === Math.floor((selected-1)/2)) || (p === selected)) {
-        edgeColor = HEAP_COLORS.active.stroke; edgeW = 2;
-      }
-    }
-    html += `<line x1="${pos[p].x}" y1="${pos[p].y+20}" x2="${pos[i].x}" y2="${pos[i].y-20}" stroke="${edgeColor}" stroke-width="${edgeW}"/>`;
+    const isRel = selected>=0 && (i===selected || p===selected || Math.floor((selected-1)/2)===p && i===selected);
+    const hiEdge = selected>=0 && (p===selected || (i===selected && p===Math.floor((selected-1)/2)));
+    html += `<line x1="${pos[p].x}" y1="${pos[p].y+22}"
+                   x2="${pos[i].x}" y2="${pos[i].y-22}"
+                   stroke="${hiEdge?'#185FA5':'#d3d1c7'}"
+                   stroke-width="${hiEdge?2:1}"/>`;
   }
-  for (let i = 0; i < n; i++) {
-    const c = HEAP_COLORS[colorMap[i] || 'normal'];
-    const lbl = labelMap[i] || '';
-    html += `<g onclick="selectNode(${i})" style="cursor:pointer">
-      <circle cx="${pos[i].x}" cy="${pos[i].y}" r="20" fill="${c.fill}" stroke="${c.stroke}" stroke-width="1.5"/>
-      <text x="${pos[i].x}" y="${pos[i].y}" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="${c.text}" font-family="var(--font-sans)">${heap[i]}</text>
-      <text x="${pos[i].x}" y="${pos[i].y-24}" text-anchor="middle" font-size="10" fill="var(--color-text-tertiary)" font-family="var(--font-sans)">i=${i}</text>
-      ${lbl ? `<text x="${pos[i].x}" y="${pos[i].y+30}" text-anchor="middle" font-size="10" fill="${c.stroke}" font-family="var(--font-sans)">${lbl}</text>` : ''}
+  // nós
+  for (let i=0; i<n; i++) {
+    let color = 'normal';
+    let lbl = '';
+    if (selected>=0) {
+      if (i===selected) { color='active'; lbl='você'; }
+      else if (i===Math.floor((selected-1)/2) && selected>0) { color='parent'; lbl='pai'; }
+      else if (i===2*selected+1) { color='child'; lbl='esq'; }
+      else if (i===2*selected+2) { color='child'; lbl='dir'; }
+    }
+    const nc = C[color] || normalColor();
+    html += `<g onclick="selectIdx(${i})" style="cursor:pointer">
+      <circle cx="${pos[i].x}" cy="${pos[i].y}" r="22"
+        fill="${nc.fill}" stroke="${nc.stroke}" stroke-width="1.5"/>
+      <text x="${pos[i].x}" y="${pos[i].y}" text-anchor="middle" dominant-baseline="central"
+        font-size="15" font-weight="600" fill="${nc.text}"
+        font-family="'DM Sans',system-ui,sans-serif">${IDX_HEAP[i]}</text>
+      <text x="${pos[i].x}" y="${pos[i].y-28}" text-anchor="middle"
+        font-size="10" fill="#9a9893"
+        font-family="'JetBrains Mono',monospace">i=${i}</text>
+      ${lbl?`<text x="${pos[i].x}" y="${pos[i].y+32}" text-anchor="middle"
+        font-size="10" fill="${nc.stroke}" font-weight="600"
+        font-family="'DM Sans',system-ui,sans-serif">${lbl}</text>`:''}
     </g>`;
   }
-  svgEl.innerHTML = html;
+  document.getElementById('idx-svg').innerHTML = html;
 }
 
-function selectNode(i) { selectedIdx = i; renderIndexPanel(i); }
+function selectIdx(i) {
+  const n = IDX_HEAP.length;
+  const p = Math.floor((i-1)/2);
+  const l = 2*i+1, r = 2*i+2;
+  let msg = `Nó [${i}] = ${IDX_HEAP[i]}`;
+  if (i > 0) msg += ` · pai = [${p}] = ${IDX_HEAP[p]}`;
+  if (l < n) msg += ` · filho esq = [${l}] = ${IDX_HEAP[l]}`;
+  if (r < n) msg += ` · filho dir = [${r}] = ${IDX_HEAP[r]}`;
+  if (l >= n) msg += ` · nó folha (sem filhos)`;
+  setMsg('idx-msg', msg, true);
+  renderIndexSvg(i);
+}
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────────────────
 resetInsert();
 resetRemove();
 resetBuild();
-renderIndexPanel(-1);
-document.getElementById('idx-svg').addEventListener('click', e => { if (e.target === document.getElementById('idx-svg')) { selectedIdx = -1; renderIndexPanel(-1); setMsg('idx-msg', 'Selecione um nó.'); } });
+renderIndexSvg(-1);
+setMsg('idx-msg', 'Clique em um nó para ver as relações.');
 </script>
+</body>
+</html>
