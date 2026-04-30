@@ -22,5 +22,8 @@
   "java.debug.settings.showStaticVariables": true,
   "java.debug.settings.showLogicalStructure": true,
   "java.debug.settings.showQualifiedNames": false,
-  "livePreview.defaultPreviewPath": "/docs/avl_desequilibrio_casos.html"
+  "livePreview.defaultPreviewPath": "/docs/avl_desequilibrio_casos.html",
+  "javaTreeViz.nodeValueField": "dado",
+  "javaTreeViz.leftField": "esquerdo",
+  "javaTreeViz.rightField": "direito"
 }

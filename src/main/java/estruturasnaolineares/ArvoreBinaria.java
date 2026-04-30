@@ -6,7 +6,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Queue;
 
-public class ArvoreBinaria<T> {
+public class ArvoreBinaria<T> implements ArvoreBinariaTAD<T> {
   public No<T> raiz;
 
   public ArvoreBinaria() {
@@ -236,32 +236,6 @@ public class ArvoreBinaria<T> {
   }
 
   // ------------------------------------------------
-  // Debug Visualizer
-  // --------------------------------------------
-  public String toDot() {
-    StringBuilder sb = new StringBuilder("digraph BST {\n");
-    sb.append("  node [shape=circle];\n");
-    toDotRecursivo(raiz, sb);
-    sb.append("}");
-    return sb.toString();
-  }
-
-  private void toDotRecursivo(No<T> no, StringBuilder sb) {
-    if (no == null)
-      return;
-    if (no.esquerdo != null) {
-      sb.append("  ").append(no.dado)
-          .append(" -> ").append(no.esquerdo.dado).append(";\n");
-      toDotRecursivo(no.esquerdo, sb);
-    }
-    if (no.direito != null) {
-      sb.append("  ").append(no.dado)
-          .append(" -> ").append(no.direito.dado).append(";\n");
-      toDotRecursivo(no.direito, sb);
-    }
-  }
-
-  // ------------------------------------------------
   /*
    * Implemente percurso in-order iterativo usando uma pilha (Stack) explícita,
    * sem recursão. Compare a implementação com a versão recursiva.
@@ -288,24 +262,5 @@ public class ArvoreBinaria<T> {
     }
 
     return resultado;
-  }
-
-  // Dado o pré-order e o in-order de uma árvore binária (sem repetições),
-  // reconstrua a árvore. Implemente um método estático reconstruir(int[]
-  // preOrder, int[] inOrder).
-
-  public static ArvoreBinaria<Integer> reconstruir(int[] preOrder, int[] inOrder) {
-    ArvoreBinaria<Integer> arvore = new ArvoreBinaria<>();
-
-    arvore.raiz = reconstruirRecursivo(preOrder, 0, preOrder.length - 1, inOrder, 0, inOrder.length - 1);
-    return arvore;
-  }
-
-  private static No<Integer> reconstruirRecursivo(int[] preOrder, int i, int j, int[] inOrder, int k, int l) {
-    if (i > j || k > l)
-      return null;
-    int dado = preOrder[i];
-    No<Integer> no = new No<>(dado);
-
   }
 }

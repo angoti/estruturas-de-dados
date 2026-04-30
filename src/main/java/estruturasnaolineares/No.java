@@ -1,7 +1,7 @@
 package estruturasnaolineares;
 
 public class No<T> {
-  T dado;
+  public T dado;
   public No<T> esquerdo;
   public No<T> direito;
 
@@ -9,5 +9,11 @@ public class No<T> {
     this.dado = dado;
     this.esquerdo = null;
     this.direito = null;
+  }
+
+  // hashcode
+  @Override
+  public int hashCode() {
+    return dado.hashCode();
   }
 }
