@@ -1,0 +1,292 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.w{padding:1rem 0;font-family:var(--font-sans)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem}
+.mc{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.75rem 1rem;text-align:center}
+.mv{font-size:1.4rem;font-weight:500;color:var(--color-text-primary)}
+.mv.ok{color:#0F6E56}.mv.warn{color:#854F0B}.mv.hot{color:#A32D2D}
+.ml{font-size:11px;color:var(--color-text-tertiary);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
+.ctrls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+.ctrls label{font-size:12px;color:var(--color-text-secondary)}
+select{font-size:13px}
+.btn{font-size:13px;font-weight:500;padding:6px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--color-background-secondary)}
+.btn.pri{background:#02C39A;border-color:#02C39A;color:#fff}
+.btn.pri:hover{background:#01a882}
+.btn.sec{border-color:var(--color-border-danger);color:var(--color-text-danger)}
+.btn.sec:hover{background:var(--color-background-danger)}
+.lbar{height:12px;border-radius:6px;background:var(--color-background-tertiary);overflow:hidden;margin-bottom:1rem;border:0.5px solid var(--color-border-tertiary)}
+.lbar-fill{height:100%;border-radius:6px;transition:width .4s,background .4s}
+.section-label{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
+.buckets-wrap{overflow-x:auto;margin-bottom:1rem}
+.buckets{display:flex;gap:4px;min-width:max-content}
+.bucket{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:36px}
+.bucket-idx{font-size:10px;color:var(--color-text-tertiary);font-family:var(--font-mono)}
+.bucket-col{display:flex;flex-direction:column;gap:3px;min-height:28px}
+.bnode{font-size:11px;font-family:var(--font-mono);font-weight:500;padding:3px 5px;border-radius:4px;background:var(--color-background-info);color:var(--color-text-info);border:0.5px solid var(--color-border-info);white-space:nowrap;transition:all .3s}
+.bnode.new{background:var(--color-background-success);color:var(--color-text-success);border-color:var(--color-border-success)}
+.bnode.rehash{background:var(--color-background-warning);color:var(--color-text-warning);border-color:var(--color-border-warning)}
+.empty-slot{width:28px;height:28px;border-radius:4px;border:0.5px dashed var(--color-border-tertiary)}
+.log{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:.75rem 1rem;font-size:12px;color:var(--color-text-secondary);line-height:1.7;min-height:52px;margin-bottom:1rem;font-family:var(--font-mono)}
+.log .hi{color:var(--color-text-primary);font-weight:500}
+.log .ok{color:#0F6E56;font-weight:500}
+.log .warn{color:#854F0B;font-weight:500}
+.log .hot{color:#A32D2D;font-weight:500}
+.hist{max-height:130px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin-bottom:1rem}
+.hist-row{font-size:11px;font-family:var(--font-mono);color:var(--color-text-secondary);padding:3px 8px;border-radius:4px;background:var(--color-background-secondary);display:flex;gap:8px;align-items:center}
+.hist-row .badge{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:500;flex-shrink:0}
+.badge-ins{background:var(--color-background-info);color:var(--color-text-info)}
+.badge-rh{background:var(--color-background-warning);color:var(--color-text-warning)}
+.code-tabs{display:flex;gap:4px;margin-bottom:0}
+.ctab{font-size:12px;padding:4px 12px;border-radius:var(--border-radius-md) var(--border-radius-md) 0 0;border:0.5px solid var(--color-border-tertiary);cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-secondary);border-bottom:none}
+.ctab.on{background:var(--color-background-primary);color:var(--color-text-primary);font-weight:500}
+.code{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:0 var(--border-radius-md) var(--border-radius-md) var(--border-radius-md);padding:.875rem 1rem;font-family:var(--font-mono);font-size:11.5px;color:var(--color-text-secondary);line-height:1.8;overflow-x:auto;white-space:pre}
+.code .kw{color:#0F6E56}.code .hi{color:var(--color-text-primary);font-weight:500}.code .cm{color:var(--color-text-tertiary);font-style:italic}
+.divv{width:0.5px;height:24px;background:var(--color-border-tertiary);flex-shrink:0}
+</style>
+
+<h2 class="sr-only">Demonstração interativa de redimensionamento dinâmico em tabelas hash</h2>
+
+<div class="w">
+
+<div class="metrics">
+  <div class="mc"><div class="mv" id="mn">0</div><div class="ml">entradas (n)</div></div>
+  <div class="mc"><div class="mv" id="mm">8</div><div class="ml">capacidade (M)</div></div>
+  <div class="mc"><div class="mv ok" id="ml2">0.00</div><div class="ml">fator de carga λ</div></div>
+  <div class="mc"><div class="mv" id="mr">0</div><div class="ml">rehashes</div></div>
+</div>
+
+<div style="margin-bottom:4px;display:flex;justify-content:space-between;align-items:center">
+  <span class="section-label">fator de carga</span>
+  <span style="font-size:11px;color:var(--color-text-tertiary)">limiar: <span id="thresh-label">0.75</span></span>
+</div>
+<div class="lbar"><div class="lbar-fill" id="lbar-fill" style="width:0%;background:#0F6E56"></div></div>
+
+<div class="ctrls">
+  <button class="btn pri" onclick="doInsert()">+ inserir chave</button>
+  <button class="btn" onclick="doInsertMany()">+ inserir 5</button>
+  <button class="btn sec" onclick="doReset()">limpar</button>
+  <div class="divv"></div>
+  <label>limiar λ:</label>
+  <select id="thresh" onchange="changeThresh()">
+    <option value="0.5">0.50</option>
+    <option value="0.75" selected>0.75</option>
+    <option value="1.0">1.00</option>
+  </select>
+  <label>crescimento:</label>
+  <select id="growth">
+    <option value="2" selected>×2</option>
+    <option value="1.5">×1.5</option>
+  </select>
+</div>
+
+<div class="section-label">tabela atual (encadeamento separado)</div>
+<div class="buckets-wrap"><div class="buckets" id="buckets"></div></div>
+
+<div id="log" class="log">Clique em <span class="hi">+ inserir chave</span> para começar.</div>
+
+<div class="section-label">histórico de operações</div>
+<div class="hist" id="hist"></div>
+
+<div class="code-tabs">
+  <div class="ctab on" id="ct1" onclick="showCode(1)">insert / rehash</div>
+  <div class="ctab" id="ct2" onclick="showCode(2)">put completo</div>
+</div>
+<div id="codeblock" class="code"></div>
+
+</div>
+
+<script>
+let M = 8, n = 0, rehashes = 0, nextKey = 1;
+let table = Array.from({length:M}, ()=>[]);
+let thresh = 0.75;
+let newKeys = new Set();
+let rehashKeys = new Set();
+
+function h(k){ return ((k % M)+M)%M; }
+function isPrime(n){ if(n<2)return false; for(let i=2;i<=Math.sqrt(n);i++)if(n%i===0)return false; return true; }
+function nextPrime(n){ let c=n; while(!isPrime(c))c++; return c; }
+
+function insert(key){
+  const idx = h(key);
+  if(table[idx].includes(key)) return false;
+  table[idx].push(key);
+  n++;
+  newKeys.add(key);
+  return true;
+}
+
+function rehash(factor){
+  rehashKeys = new Set([].concat(...table));
+  newKeys.clear();
+  const newM = nextPrime(Math.ceil(M * factor));
+  M = newM;
+  const old = table;
+  table = Array.from({length:M}, ()=>[]);
+  for(const bucket of old) for(const k of bucket){
+    table[((k%M)+M)%M].push(k);
+  }
+  rehashes++;
+  addHist('rehash', `M ${Math.round(M/factor)} → ${M}  (n=${n})`);
+}
+
+function doInsert(){
+  const key = nextKey++;
+  insert(key);
+  const lambda = n/M;
+  const factor = parseFloat(document.getElementById('growth').value);
+  let didRehash = false;
+  if(lambda > thresh){
+    addHist('insert', `chave ${key}  →  bucket[${((key%M)+M)%M}]`);
+    rehash(factor);
+    setLog(`<span class="hot">⬆ Rehash disparado!</span>  λ = ${(n/M*(1/1)).toFixed(2)} antes do redimensionamento.\nNova capacidade M = <span class="hi">${M}</span>. Todas as chaves reinseridas com h(k) = k mod ${M}.`);
+    didRehash = true;
+  } else {
+    addHist('insert', `chave ${key}  →  bucket[${h(key)}]`);
+    setLog(`Chave <span class="hi">${key}</span> inserida em bucket[<span class="hi">${h(key)}</span>].  λ = <span class="hi">${(n/M).toFixed(2)}</span>  (limiar: ${thresh})`);
+  }
+  render();
+  if(!didRehash) setTimeout(()=>{ newKeys.clear(); render(); }, 900);
+  else setTimeout(()=>{ rehashKeys.clear(); render(); }, 1200);
+}
+
+function doInsertMany(){
+  for(let i=0;i<5;i++) setTimeout(()=>doInsert(), i*180);
+}
+
+function doReset(){
+  M=8; n=0; rehashes=0; nextKey=1;
+  table=Array.from({length:M},()=>[]); newKeys.clear(); rehashKeys.clear();
+  document.getElementById('hist').innerHTML='';
+  setLog('Tabela reiniciada com M = 8.');
+  render();
+}
+
+function changeThresh(){
+  thresh = parseFloat(document.getElementById('thresh').value);
+  document.getElementById('thresh-label').textContent = thresh.toFixed(2);
+  render();
+}
+
+function render(){
+  const bwrap = document.getElementById('buckets');
+  bwrap.innerHTML='';
+  for(let i=0;i<M;i++){
+    const col = document.createElement('div');
+    col.className='bucket';
+    const idx = document.createElement('div');
+    idx.className='bucket-idx'; idx.textContent=i;
+    const bcol = document.createElement('div');
+    bcol.className='bucket-col';
+    if(table[i].length===0){
+      const e=document.createElement('div'); e.className='empty-slot'; bcol.appendChild(e);
+    } else {
+      for(const k of table[i]){
+        const nd=document.createElement('div');
+        nd.className='bnode'+(newKeys.has(k)?' new':rehashKeys.has(k)?' rehash':'');
+        nd.textContent=k; bcol.appendChild(nd);
+      }
+    }
+    col.appendChild(idx); col.appendChild(bcol); bwrap.appendChild(col);
+  }
+  const lam = n/M;
+  document.getElementById('mn').textContent=n;
+  document.getElementById('mm').textContent=M;
+  const lel = document.getElementById('ml2');
+  lel.textContent=lam.toFixed(2);
+  lel.className='mv'+(lam<0.5?' ok':lam<thresh?' warn':' hot');
+  document.getElementById('mr').textContent=rehashes;
+  const pct = Math.min(lam/thresh*100,100);
+  const fill = document.getElementById('lbar-fill');
+  fill.style.width=pct+'%';
+  fill.style.background=lam<0.5?'#0F6E56':lam<thresh?'#854F0B':'#A32D2D';
+  updateCode();
+}
+
+function addHist(type, text){
+  const h=document.getElementById('hist');
+  const row=document.createElement('div'); row.className='hist-row';
+  const b=document.createElement('span');
+  b.className='badge '+(type==='rehash'?'badge-rh':'badge-ins');
+  b.textContent=type; row.appendChild(b);
+  const t=document.createElement('span'); t.textContent=text; row.appendChild(t);
+  h.insertBefore(row,h.firstChild);
+}
+
+function setLog(html){ document.getElementById('log').innerHTML=html; }
+
+function showCode(n){
+  document.getElementById('ct1').className='ctab'+(n===1?' on':'');
+  document.getElementById('ct2').className='ctab'+(n===2?' on':'');
+  updateCode();
+}
+
+function updateCode(){
+  const tab = document.getElementById('ct1').classList.contains('on') ? 1 : 2;
+  const lam = thresh, gr = parseFloat(document.getElementById('growth').value);
+  const cb = document.getElementById('codeblock');
+  if(tab===1){
+    cb.innerHTML=
+`<span class="kw">private void</span> <span class="hi">insert</span>(<span class="kw">int</span> key) {
+    <span class="kw">int</span> idx = hash(key);           <span class="cm">// h(k) = k mod M</span>
+    buckets[idx].add(key);
+    n++;
+
+    <span class="cm">// Verifica limiar após cada inserção</span>
+    <span class="kw">if</span> ((double) n / M > ${lam}) {
+        rehash();               <span class="cm">// λ > ${lam} → redimensionar</span>
+    }
+}
+
+<span class="kw">private void</span> <span class="hi">rehash</span>() {
+    <span class="kw">int</span> newM = nextPrime((int) Math.ceil(M * ${gr}));
+    List<span style="color:var(--color-text-secondary)">[]</span> newBuckets = newArray(newM);
+
+    <span class="cm">// Reinsere TUDO com nova função h(k) = k mod newM</span>
+    <span class="kw">for</span> (List bucket : buckets)
+        <span class="kw">for</span> (<span class="kw">int</span> k : bucket)
+            newBuckets[k % newM].add(k);
+
+    this.buckets = newBuckets;  <span class="cm">// descarta tabela antiga</span>
+    this.M = newM;              <span class="cm">// M atual: ${M}</span>
+}`;
+  } else {
+    cb.innerHTML=
+`<span class="kw">public class</span> <span class="hi">HashTable</span>&lt;K,V&gt; {
+
+    <span class="kw">private static final double</span> LOAD_FACTOR = ${lam};
+    <span class="kw">private static final double</span> GROW_FACTOR  = ${gr};
+
+    <span class="kw">private</span> LinkedList&lt;Entry&lt;K,V&gt;&gt;[] buckets;
+    <span class="kw">private int</span> M = 8;     <span class="cm">// capacidade inicial (primo)</span>
+    <span class="kw">private int</span> n = 0;     <span class="cm">// entradas; agora n = ${n}, M = ${M}</span>
+
+    <span class="kw">private int</span> <span class="hi">hash</span>(K key) {
+        <span class="kw">return</span> ((key.hashCode() % M) + M) % M;
+    }
+
+    <span class="kw">public void</span> <span class="hi">put</span>(K key, V value) {
+        <span class="kw">int</span> idx = hash(key);
+        <span class="kw">for</span> (Entry e : buckets[idx])
+            <span class="kw">if</span> (e.key.equals(key)) { e.val = value; <span class="kw">return</span>; }
+        buckets[idx].add(<span class="kw">new</span> Entry(key, value));
+        n++;
+        <span class="kw">if</span> ((double) n / M > LOAD_FACTOR) rehash();
+    }
+
+    <span class="kw">private void</span> <span class="hi">rehash</span>() {
+        <span class="kw">int</span> newM = nextPrime((<span class="kw">int</span>) Math.ceil(M * GROW_FACTOR));
+        <span class="cm">// Θ(n) — amortiza para O(1) por inserção ao longo do tempo</span>
+        LinkedList[] nb = <span class="kw">new</span> LinkedList[newM];
+        <span class="kw">for</span> (LinkedList b : buckets)
+            <span class="kw">for</span> (Entry e : b)
+                nb[((e.key.hashCode() % newM)+newM) % newM].add(e);
+        buckets = nb; M = newM;
+    }
+}`;
+  }
+}
+
+render();
+</script>
