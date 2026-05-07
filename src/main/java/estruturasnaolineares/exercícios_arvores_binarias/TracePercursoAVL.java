@@ -45,7 +45,7 @@ public class TracePercursoAVL {
     AVL<Integer> avl = new AVL<>();
     BST<Integer> bst = new BST<>();
 
-    for (int i = 1; i <= 10; i++) {
+    for (int i = 1; i <= 100; i++) {
       int valor = (int) (Math.random() * 10000);
       avl.inserir(valor);
       bst.inserir(valor);

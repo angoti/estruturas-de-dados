@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Endereçamento Aberto — Tabelas Hash | IFTM Estrutura de Dados</title>
+<style>
+/* ============================================================
+   DESIGN TOKENS — IFTM
+   Cores institucionais e paleta semântica exportada
+   ============================================================ */
+:root {
+  /* Cores institucionais IFTM */
+  --iftm-teal:       #02C39A;
+  --iftm-navy:       #01161E;
+  --iftm-offwhite:   #F8FAFC;
+
+  /* Superfícies */
+  --color-background-page:      #F8FAFC;
+  --color-background-primary:   #FFFFFF;
+  --color-background-secondary: #F1F0E8;
+  --color-background-tertiary:  #E8E7DF;
+
+  /* Semântica: info (azul) */
+  --color-background-info:  #E6F1FB;
+  --color-border-info:      #378ADD;
+  --color-text-info:        #0C447C;
+
+  /* Semântica: sucesso (verde) */
+  --color-background-success: #EAF3DE;
+  --color-border-success:     #639922;
+  --color-text-success:       #27500A;
+
+  /* Semântica: aviso (âmbar) */
+  --color-background-warning: #FAEEDA;
+  --color-border-warning:     #BA7517;
+  --color-text-warning:       #633806;
+
+  /* Semântica: perigo/erro (vermelho) */
+  --color-background-danger:  #FCEBEB;
+  --color-border-danger:      #E24B4A;
+  --color-text-danger:        #791F1F;
+
+  /* Texto */
+  --color-text-primary:   #2C2C2A;
+  --color-text-secondary: #5F5E5A;
+  --color-text-tertiary:  #888780;
+
+  /* Bordas */
+  --color-border-tertiary:  rgba(44,44,42,.15);
+  --color-border-secondary: rgba(44,44,42,.30);
+  --color-border-primary:   rgba(44,44,42,.40);
+
+  /* Tipografia */
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+
+  /* Layout */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background-page:      #0D1117;
+    --color-background-primary:   #161B22;
+    --color-background-secondary: #21262D;
+    --color-background-tertiary:  #30363D;
+
+    --color-background-info:    #042C53;
+    --color-border-info:        #378ADD;
+    --color-text-info:          #85B7EB;
+
+    --color-background-success: #173404;
+    --color-border-success:     #639922;
+    --color-text-success:       #C0DD97;
+
+    --color-background-warning: #412402;
+    --color-border-warning:     #BA7517;
+    --color-text-warning:       #FAC775;
+
+    --color-background-danger:  #501313;
+    --color-border-danger:      #E24B4A;
+    --color-text-danger:        #F09595;
+
+    --color-text-primary:   #E6EDF3;
+    --color-text-secondary: #8B949E;
+    --color-text-tertiary:  #6E7681;
+
+    --color-border-tertiary:  rgba(230,237,243,.15);
+    --color-border-secondary: rgba(230,237,243,.30);
+    --color-border-primary:   rgba(230,237,243,.40);
+  }
+}
+
+/* ============================================================
+   RESET E BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+html { font-size: 16px; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-background-page);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   CABEÇALHO INSTITUCIONAL
+   ============================================================ */
+.page-header {
+  background: var(--iftm-navy);
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+}
+
+.header-stripe {
+  width: 6px;
+  background: var(--iftm-teal);
+  flex-shrink: 0;
+}
+
+.header-content {
+  padding: 1.25rem 2rem;
+}
+
+.header-eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--iftm-teal);
+  margin-bottom: .25rem;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  line-height: 1.3;
+}
+
+.header-subtitle {
+  font-size: 13px;
+  color: rgba(255,255,255,.5);
+  margin-top: .2rem;
+}
+
+/* ============================================================
+   LAYOUT PRINCIPAL
+   ============================================================ */
+.page-body {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+/* ============================================================
+   CONTROLES
+   ============================================================ */
+.controls-card {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.controls-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.controls-row label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+select, input[type=text] {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: 6px 10px;
+  border: 0.5px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-md);
+  background: var(--color-background-page);
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color .15s;
+}
+
+select:focus, input[type=text]:focus {
+  border-color: var(--iftm-teal);
+  box-shadow: 0 0 0 3px rgba(2,195,154,.15);
+}
+
+input[type=text] { width: 90px; font-family: var(--font-mono); }
+
+.divider-v {
+  width: 0.5px;
+  height: 28px;
+  background: var(--color-border-tertiary);
+  flex-shrink: 0;
+}
+
+.btn {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: var(--border-radius-md);
+  border: 0.5px solid var(--color-border-secondary);
+  background: var(--color-background-primary);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, transform .08s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--color-background-secondary); }
+.btn:active { transform: scale(.97); }
+
+.btn-primary {
+  background: var(--iftm-teal);
+  border-color: var(--iftm-teal);
+  color: #FFFFFF;
+}
+.btn-primary:hover { background: #01a882; border-color: #01a882; }
+
+.btn-danger {
+  border-color: var(--color-border-danger);
+  color: var(--color-text-danger);
+}
+.btn-danger:hover { background: var(--color-background-danger); }
+
+.btn-ghost {
+  border-color: transparent;
+  color: var(--color-text-tertiary);
+}
+.btn-ghost:hover { background: var(--color-background-secondary); color: var(--color-text-secondary); }
+
+/* ============================================================
+   MÉTRICAS
+   ============================================================ */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 1.25rem;
+}
+
+.metric {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+  padding: .75rem 1rem;
+  text-align: center;
+}
+
+.metric-val {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.metric-val.accent { color: var(--iftm-teal); }
+.metric-val.warn   { color: var(--color-text-warning); }
+
+.metric-label {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-top: 3px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   LEGENDA
+   ============================================================ */
+.legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  align-items: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  border: 0.5px solid var(--color-border-tertiary);
+}
+
+.legend-dot.free     { background: var(--color-background-secondary); }
+.legend-dot.occupied { background: var(--color-background-info); border-color: var(--color-border-info); }
+.legend-dot.deleted  { background: var(--color-background-warning); border-color: var(--color-border-warning); }
+.legend-dot.probing  { background: var(--color-background-danger); border-color: var(--color-border-danger); }
+.legend-dot.success  { background: var(--color-background-success); border-color: var(--color-border-success); }
+
+/* ============================================================
+   GRADE DA TABELA HASH
+   ============================================================ */
+.hash-grid {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 1.25rem;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 58px;
+  border-radius: var(--border-radius-md);
+  border: 0.5px solid var(--color-border-tertiary);
+  background: var(--color-background-secondary);
+  position: relative;
+  transition: background .2s, border-color .2s, transform .2s;
+  overflow: hidden;
+}
+
+.cell.empty { opacity: .5; }
+
+.cell.occupied {
+  background: var(--color-background-info);
+  border-color: var(--color-border-info);
+}
+
+.cell.deleted {
+  background: var(--color-background-warning);
+  border-color: var(--color-border-warning);
+}
+
+.cell.probe-highlight {
+  background: var(--color-background-danger);
+  border-color: var(--color-border-danger);
+  transform: scale(1.06);
+  z-index: 1;
+}
+
+.cell.probe-success {
+  background: var(--color-background-success);
+  border-color: var(--color-border-success);
+  transform: scale(1.06);
+  z-index: 1;
+}
+
+.cell-idx {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.cell-key {
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--color-text-secondary);
+}
+
+.cell.occupied .cell-key { color: var(--color-text-info); }
+.cell.deleted  .cell-key { color: var(--color-text-warning); text-decoration: line-through; }
+.cell.probe-highlight .cell-key { color: var(--color-text-danger); }
+.cell.probe-success   .cell-key { color: var(--color-text-success); }
+
+/* ============================================================
+   LOG DE PASSOS
+   ============================================================ */
+.step-log {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-md);
+  padding: 1rem 1.25rem;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  min-height: 60px;
+  margin-bottom: 1.25rem;
+}
+
+.step-log .formula {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-info);
+  background: var(--color-background-info);
+  border-left: 3px solid var(--color-border-info);
+  padding: .5rem .75rem;
+  border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+  margin-bottom: .5rem;
+  word-break: break-all;
+}
+
+.step-log .ok  { color: var(--color-text-success); font-weight: 500; }
+.step-log .col { color: var(--color-text-danger);  font-weight: 500; }
+
+/* ============================================================
+   ABAS E BLOCO DE CÓDIGO
+   ============================================================ */
+.tabs-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: .5rem;
+}
+
+.tab {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 14px;
+  border-radius: var(--border-radius-md);
+  border: 0.5px solid var(--color-border-tertiary);
+  cursor: pointer;
+  background: var(--color-background-secondary);
+  color: var(--color-text-secondary);
+  transition: background .15s;
+}
+
+.tab:hover { background: var(--color-background-tertiary); }
+
+.tab.active {
+  background: var(--iftm-navy);
+  border-color: var(--iftm-navy);
+  color: var(--iftm-teal);
+}
+
+@media (prefers-color-scheme: dark) {
+  .tab.active {
+    background: var(--iftm-teal);
+    border-color: var(--iftm-teal);
+    color: var(--iftm-navy);
+  }
+}
+
+.code-block {
+  background: var(--color-background-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-top: 3px solid var(--iftm-teal);
+  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+  padding: 1rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.75;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.code-block .hi  { color: var(--color-text-primary); font-weight: 600; }
+.code-block .kw  { color: var(--iftm-teal); }
+.code-block .cm  { color: var(--color-text-tertiary); font-style: italic; }
+
+/* ============================================================
+   RODAPÉ
+   ============================================================ */
+.page-footer {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 0.5px solid var(--color-border-tertiary);
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
+
+.footer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: var(--iftm-navy);
+  color: var(--iftm-teal);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   RESPONSIVIDADE
+   ============================================================ */
+@media (max-width: 600px) {
+  .metrics-row { grid-template-columns: repeat(2, 1fr); }
+  .controls-row { gap: 8px; }
+  .page-body { padding: 1.25rem 1rem 2rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── CABEÇALHO ─────────────────────────────────────────── -->
+<header class="page-header" role="banner">
+  <div class="header-stripe" aria-hidden="true"></div>
+  <div class="header-content">
+    <p class="header-eyebrow">IFTM · Estrutura de Dados · 2026/1</p>
+    <h1 class="header-title">Endereçamento Aberto em Tabelas Hash</h1>
+    <p class="header-subtitle">Linear Probing · Quadratic Probing · Double Hashing</p>
+  </div>
+</header>
+
+<!-- ── CORPO ──────────────────────────────────────────────── -->
+<main class="page-body" role="main">
+
+  <!-- Controles -->
+  <div class="controls-card" role="region" aria-label="Controles da simulação">
+    <div class="controls-row">
+      <label for="keyInput">Chave (inteiro):</label>
+      <input type="text" id="keyInput" placeholder="ex: 42" value="42" aria-label="Chave a inserir, buscar ou deletar" />
+
+      <div class="divider-v" aria-hidden="true"></div>
+
+      <label for="strategy">Estratégia:</label>
+      <select id="strategy" aria-label="Estratégia de sondagem">
+        <option value="linear">Linear probing</option>
+        <option value="quadratic">Quadratic probing</option>
+        <option value="double">Double hashing</option>
+      </select>
+
+      <label for="capacity">Capacidade M:</label>
+      <select id="capacity" aria-label="Capacidade da tabela">
+        <option value="7">7</option>
+        <option value="11" selected>11</option>
+        <option value="13">13</option>
+        <option value="17">17</option>
+      </select>
+
+      <div class="divider-v" aria-hidden="true"></div>
+
+      <button class="btn btn-primary" onclick="doInsert()" aria-label="Inserir chave">Inserir</button>
+      <button class="btn"             onclick="doSearch()" aria-label="Buscar chave">Buscar</button>
+      <button class="btn btn-danger"  onclick="doDelete()" aria-label="Deletar chave">Deletar</button>
+      <button class="btn btn-ghost"   onclick="doReset()"  aria-label="Limpar tabela">Limpar</button>
+    </div>
+  </div>
+
+  <!-- Métricas -->
+  <div class="metrics-row" role="region" aria-label="Métricas da tabela">
+    <div class="metric">
+      <div class="metric-val accent" id="mSize">0</div>
+      <div class="metric-label">entradas (n)</div>
+    </div>
+    <div class="metric">
+      <div class="metric-val" id="mCap">11</div>
+      <div class="metric-label">capacidade (M)</div>
+    </div>
+    <div class="metric">
+      <div class="metric-val" id="mLoad">0.00</div>
+      <div class="metric-label">fator de carga λ</div>
+    </div>
+    <div class="metric">
+      <div class="metric-val" id="mProbes">—</div>
+      <div class="metric-label">sondagens (última op.)</div>
+    </div>
+  </div>
+
+  <!-- Legenda -->
+  <div class="legend" role="note" aria-label="Legenda das células">
+    <span class="legend-item"><span class="legend-dot free"></span>Livre</span>
+    <span class="legend-item"><span class="legend-dot occupied"></span>Ocupado</span>
+    <span class="legend-item"><span class="legend-dot deleted"></span>Deletado (tombstone)</span>
+    <span class="legend-item"><span class="legend-dot probing"></span>Colisão (sondando)</span>
+    <span class="legend-item"><span class="legend-dot success"></span>Posição final</span>
+  </div>
+
+  <!-- Grade hash -->
+  <div id="grid" class="hash-grid" role="grid" aria-label="Tabela hash"></div>
+
+  <!-- Log -->
+  <div id="stepLog" class="step-log" role="status" aria-live="polite">
+    Insira um valor inteiro para iniciar a demonstração.
+  </div>
+
+  <!-- Abas código -->
+  <div class="tabs-row" role="tablist" aria-label="Código e fórmulas">
+    <button class="tab active" id="tab-java"    role="tab" aria-selected="true"  onclick="showTab('java')">Java (implementação)</button>
+    <button class="tab"        id="tab-formula" role="tab" aria-selected="false" onclick="showTab('formula')">Fórmulas e complexidade</button>
+  </div>
+  <div id="code-java"    class="code-block" role="tabpanel" aria-labelledby="tab-java"></div>
+  <div id="code-formula" class="code-block" role="tabpanel" aria-labelledby="tab-formula" style="display:none"></div>
+
+  <!-- Rodapé -->
+  <footer class="page-footer">
+    <span>Disciplina de Estrutura de Dados · Curso Superior de Tecnologia em Sistemas para Internet</span>
+    <span class="footer-badge">IFTM · Campus Uberlândia Centro</span>
+  </footer>
+
+</main>
+
+<!-- ── LÓGICA ─────────────────────────────────────────────── -->
+<script>
+const M_STATE = { EMPTY: 0, OCCUPIED: 1, DELETED: 2 };
+
+let CAP = 11;
+let table = [];
+let states = [];
+let lastProbes = 0;
+
+function initTable(cap) {
+  CAP = cap;
+  table  = new Array(CAP).fill(null);
+  states = new Array(CAP).fill(M_STATE.EMPTY);
+  lastProbes = 0;
+  renderGrid([]);
+  updateMetrics();
+  setLog('Tabela reiniciada com capacidade M = ' + CAP + '.');
+}
+
+/* Funções de hash */
+function h1(k) { return ((k % CAP) + CAP) % CAP; }
+
+function largestPrimeLess(n) {
+  for (let c = n - 1; c >= 2; c--) if (isPrime(c)) return c;
+  return 1;
+}
+function isPrime(n) {
+  if (n < 2) return false;
+  for (let i = 2; i <= Math.sqrt(n); i++) if (n % i === 0) return false;
+  return true;
+}
+function h2(k) {
+  const p = largestPrimeLess(CAP);
+  return p - (((k % p) + p) % p);
+}
+
+/* Sequência de sondagem */
+function probeSeq(key, strategy) {
+  const seq = [];
+  const base = h1(key);
+  for (let i = 0; i < CAP; i++) {
+    let idx;
+    if (strategy === 'linear')    idx = (base + i)       % CAP;
+    else if (strategy === 'quadratic') idx = (base + i * i)  % CAP;
+    else                          idx = (base + i * h2(key)) % CAP;
+    seq.push(idx);
+  }
+  return seq;
+}
+
+function getStrategy() { return document.getElementById('strategy').value; }
+
+/* Inserção */
+function doInsert() {
+  const key = parseKey(); if (key === null) return;
+  const strategy = getStrategy();
+  const seq = probeSeq(key, strategy);
+  let probes = 0, inserted = false, firstDeleted = -1;
+  const highlight = [];
+  let log = formulaLine(key, strategy);
+
+  for (let i = 0; i < seq.length; i++) {
+    const idx = seq[i];
+    probes++;
+    if (states[idx] === M_STATE.DELETED && firstDeleted === -1) firstDeleted = idx;
+    if (states[idx] === M_STATE.OCCUPIED && table[idx] === key) {
+      setLog(log + '\n<span class="col">✗ Chave ' + key + ' já existe na posição [' + idx + '].</span>');
+      renderGrid([{ idx, type: 'probe-highlight' }]);
+      return;
+    }
+    if (states[idx] === M_STATE.EMPTY) {
+      const ins = firstDeleted !== -1 ? firstDeleted : idx;
+      for (let j = 0; j < i; j++) if (seq[j] !== ins) highlight.push({ idx: seq[j], type: 'probe-highlight' });
+      highlight.push({ idx: ins, type: 'probe-success' });
+      table[ins] = key; states[ins] = M_STATE.OCCUPIED;
+      inserted = true;
+      log += '\n<span class="ok">✔ Inserido na posição [' + ins + '] após ' + probes + ' sondagem(ns).</span>';
+      break;
+    }
+    if (i > 0) highlight.push({ idx, type: 'probe-highlight' });
+  }
+  if (!inserted && firstDeleted !== -1) {
+    table[firstDeleted] = key; states[firstDeleted] = M_STATE.OCCUPIED;
+    highlight.push({ idx: firstDeleted, type: 'probe-success' });
+    log += '\n<span class="ok">✔ Inserido em tombstone na posição [' + firstDeleted + '].</span>';
+  } else if (!inserted) {
+    log += '\n<span class="col">✗ Tabela cheia — não foi possível inserir.</span>';
+  }
+  lastProbes = probes;
+  renderGrid(highlight); updateMetrics(); setLog(log);
+}
+
+/* Busca */
+function doSearch() {
+  const key = parseKey(); if (key === null) return;
+  const strategy = getStrategy();
+  const seq = probeSeq(key, strategy);
+  let log = formulaLine(key, strategy);
+  const highlight = [];
+  let probes = 0;
+
+  for (let i = 0; i < seq.length; i++) {
+    const idx = seq[i]; probes++;
+    if (states[idx] === M_STATE.OCCUPIED && table[idx] === key) {
+      for (let j = 0; j < i; j++) highlight.push({ idx: seq[j], type: 'probe-highlight' });
+      highlight.push({ idx, type: 'probe-success' });
+      log += '\n<span class="ok">✔ Encontrado na posição [' + idx + '] após ' + probes + ' sondagem(ns).</span>';
+      lastProbes = probes; renderGrid(highlight); updateMetrics(); setLog(log); return;
+    }
+    if (states[idx] === M_STATE.EMPTY) {
+      for (let j = 0; j <= i; j++) highlight.push({ idx: seq[j], type: 'probe-highlight' });
+      log += '\n<span class="col">✗ Chave ' + key + ' não encontrada (célula vazia em [' + idx + ']).</span>';
+      lastProbes = probes; renderGrid(highlight); updateMetrics(); setLog(log); return;
+    }
+    if (i > 0) highlight.push({ idx, type: 'probe-highlight' });
+  }
+  log += '\n<span class="col">✗ Chave ' + key + ' não encontrada (tabela percorrida por completo).</span>';
+  lastProbes = probes; renderGrid(highlight); updateMetrics(); setLog(log);
+}
+
+/* Deleção */
+function doDelete() {
+  const key = parseKey(); if (key === null) return;
+  const strategy = getStrategy();
+  const seq = probeSeq(key, strategy);
+  let log = formulaLine(key, strategy);
+  const highlight = [];
+  let probes = 0;
+
+  for (let i = 0; i < seq.length; i++) {
+    const idx = seq[i]; probes++;
+    if (states[idx] === M_STATE.OCCUPIED && table[idx] === key) {
+      for (let j = 0; j < i; j++) highlight.push({ idx: seq[j], type: 'probe-highlight' });
+      highlight.push({ idx, type: 'probe-success' });
+      states[idx] = M_STATE.DELETED; table[idx] = '✗';
+      log += '\n<span class="ok">✔ Deletado (tombstone) na posição [' + idx + '] após ' + probes + ' sondagem(ns).</span>';
+      lastProbes = probes; renderGrid(highlight); updateMetrics(); setLog(log); return;
+    }
+    if (states[idx] === M_STATE.EMPTY) {
+      log += '\n<span class="col">✗ Chave ' + key + ' não encontrada.</span>';
+      lastProbes = probes; renderGrid(highlight); updateMetrics(); setLog(log); return;
+    }
+    if (i > 0) highlight.push({ idx, type: 'probe-highlight' });
+  }
+  log += '\n<span class="col">✗ Chave ' + key + ' não encontrada.</span>';
+  lastProbes = probes; renderGrid(highlight); updateMetrics(); setLog(log);
+}
+
+function doReset() { initTable(parseInt(document.getElementById('capacity').value)); }
+
+/* Auxiliares */
+function parseKey() {
+  const v = parseInt(document.getElementById('keyInput').value.trim(), 10);
+  if (isNaN(v)) { setLog('<span class="col">⚠ Digite um inteiro válido.</span>'); return null; }
+  return v;
+}
+
+function formulaLine(key, strategy) {
+  const base = h1(key);
+  let f;
+  if (strategy === 'linear')
+    f = `idx(i) = (h(${key}) + i) mod ${CAP}  =  (${base} + i) mod ${CAP}`;
+  else if (strategy === 'quadratic')
+    f = `idx(i) = (h(${key}) + i²) mod ${CAP}  =  (${base} + i²) mod ${CAP}`;
+  else {
+    const p = largestPrimeLess(CAP), h2v = h2(key);
+    f = `idx(i) = (h₁(${key}) + i·h₂(${key})) mod ${CAP}  =  (${base} + i·${h2v}) mod ${CAP}   [primo p = ${p}]`;
+  }
+  return '<span class="formula">' + f + '</span>';
+}
+
+function renderGrid(highlights) {
+  const hMap = {};
+  highlights.forEach(h => { hMap[h.idx] = h.type; });
+  const cols = CAP <= 11 ? CAP : Math.ceil(CAP / 2);
+  const grid = document.getElementById('grid');
+  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  grid.innerHTML = '';
+
+  for (let i = 0; i < CAP; i++) {
+    const cell = document.createElement('div');
+    const extra = hMap[i] || '';
+    cell.className = 'cell ' + (extra || (states[i] === M_STATE.OCCUPIED ? 'occupied' : states[i] === M_STATE.DELETED ? 'deleted' : 'empty'));
+    cell.setAttribute('role', 'gridcell');
+    cell.setAttribute('aria-label', 'Posição ' + i + ': ' + (states[i] === M_STATE.EMPTY ? 'livre' : table[i]));
+
+    const idxEl = document.createElement('span');
+    idxEl.className = 'cell-idx'; idxEl.textContent = i;
+
+    const keyEl = document.createElement('span');
+    keyEl.className = 'cell-key';
+    keyEl.textContent = states[i] === M_STATE.EMPTY ? '—' : table[i];
+
+    cell.append(idxEl, keyEl);
+    grid.appendChild(cell);
+  }
+}
+
+function updateMetrics() {
+  const size = states.filter(s => s === M_STATE.OCCUPIED).length;
+  const load = size / CAP;
+  document.getElementById('mSize').textContent   = size;
+  document.getElementById('mCap').textContent    = CAP;
+  document.getElementById('mLoad').textContent   = load.toFixed(2);
+  document.getElementById('mLoad').className     = 'metric-val' + (load >= 0.7 ? ' warn' : ' accent');
+  document.getElementById('mProbes').textContent = lastProbes || '—';
+}
+
+function setLog(html) { document.getElementById('stepLog').innerHTML = html; }
+
+function showTab(t) {
+  ['java','formula'].forEach(id => {
+    document.getElementById('tab-' + id).className  = 'tab' + (id === t ? ' active' : '');
+    document.getElementById('tab-' + id).setAttribute('aria-selected', id === t ? 'true' : 'false');
+    document.getElementById('code-' + id).style.display = id === t ? '' : 'none';
+  });
+}
+
+/* Geração do código Java */
+function updateCode() {
+  const s = getStrategy();
+  const p = largestPrimeLess(CAP);
+
+  let probe;
+  if (s === 'linear') {
+    probe =
+`    <span class="cm">// idx(i) = (h(k) + i) mod M — Θ(1) por passo</span>
+    <span class="cm">// Problema: clustering primário (cadeias de células adjacentes)</span>
+    <span class="kw">private int</span> <span class="hi">probe</span>(<span class="kw">int</span> key, <span class="kw">int</span> i) {
+        <span class="kw">return</span> (h1(key) + i) % M;
+    }`;
+  } else if (s === 'quadratic') {
+    probe =
+`    <span class="cm">// idx(i) = (h(k) + i²) mod M</span>
+    <span class="cm">// Evita clustering primário; pode não cobrir todas posições</span>
+    <span class="cm">// Cobertura completa garantida se M é primo e λ ≤ 0.5</span>
+    <span class="kw">private int</span> <span class="hi">probe</span>(<span class="kw">int</span> key, <span class="kw">int</span> i) {
+        <span class="kw">return</span> (h1(key) + i * i) % M;
+    }`;
+  } else {
+    probe =
+`    <span class="cm">// idx(i) = (h₁(k) + i · h₂(k)) mod M</span>
+    <span class="cm">// h₂ nunca é 0: usa primo p = ${p} &lt; M = ${CAP}</span>
+    <span class="cm">// Distribui quasi-uniformemente — menor clustering</span>
+    <span class="kw">private int</span> <span class="hi">h2</span>(<span class="kw">int</span> key) {
+        <span class="kw">return</span> ${p} - (key % ${p});
+    }
+
+    <span class="kw">private int</span> <span class="hi">probe</span>(<span class="kw">int</span> key, <span class="kw">int</span> i) {
+        <span class="kw">return</span> (h1(key) + i * h2(key)) % M;
+    }`;
+  }
+
+  document.getElementById('code-java').innerHTML =
+`<span class="cm">// ─── HashTable com endereçamento aberto ───────────────────────────────────────</span>
+<span class="cm">// Estratégia: ${s === 'linear' ? 'Linear Probing' : s === 'quadratic' ? 'Quadratic Probing' : 'Double Hashing'}</span>
+<span class="kw">public class</span> <span class="hi">HashTable</span> {
+
+    <span class="kw">private static final int</span> EMPTY   = Integer.MIN_VALUE;
+    <span class="kw">private static final int</span> DELETED = Integer.MIN_VALUE + 1; <span class="cm">// tombstone</span>
+
+    <span class="kw">private final int</span>[] table;
+    <span class="kw">private final int</span>   M;     <span class="cm">// capacidade — deve ser primo</span>
+    <span class="kw">private int</span>          size;
+
+    <span class="kw">public</span> <span class="hi">HashTable</span>(<span class="kw">int</span> capacity) {
+        M     = capacity;
+        table = <span class="kw">new int</span>[M];
+        Arrays.fill(table, EMPTY);
+    }
+
+    <span class="cm">// h₁(k) = k mod M — função de hash primária</span>
+    <span class="kw">private int</span> <span class="hi">h1</span>(<span class="kw">int</span> key) {
+        <span class="kw">return</span> ((key % M) + M) % M; <span class="cm">// trata negativos</span>
+    }
+
+${probe}
+
+    <span class="cm">// Inserção — O(1) amortizado com λ baixo</span>
+    <span class="kw">public void</span> <span class="hi">insert</span>(<span class="kw">int</span> key) {
+        <span class="kw">int</span> firstDeleted = -1;
+        <span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; M; i++) {
+            <span class="kw">int</span> idx = probe(key, i);
+            <span class="kw">if</span> (table[idx] == DELETED &amp;&amp; firstDeleted == -1) firstDeleted = idx;
+            <span class="kw">if</span> (table[idx] == EMPTY) {
+                <span class="kw">int</span> pos = (firstDeleted != -1) ? firstDeleted : idx;
+                table[pos] = key; size++;
+                <span class="kw">return</span>;
+            }
+            <span class="kw">if</span> (table[idx] == key) <span class="kw">return</span>; <span class="cm">// duplicata ignorada</span>
+        }
+        <span class="kw">throw new</span> IllegalStateException(<span class="hi">"Tabela cheia — faça rehash"</span>);
+    }
+
+    <span class="cm">// Busca — O(1) amortizado; para em EMPTY, continua em DELETED</span>
+    <span class="kw">public boolean</span> <span class="hi">search</span>(<span class="kw">int</span> key) {
+        <span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; M; i++) {
+            <span class="kw">int</span> idx = probe(key, i);
+            <span class="kw">if</span> (table[idx] == EMPTY)  <span class="kw">return false</span>;
+            <span class="kw">if</span> (table[idx] == key)    <span class="kw">return true</span>;
+        }
+        <span class="kw">return false</span>;
+    }
+
+    <span class="cm">// Deleção lazy — marca tombstone; NÃO remove fisicamente</span>
+    <span class="kw">public boolean</span> <span class="hi">delete</span>(<span class="kw">int</span> key) {
+        <span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; M; i++) {
+            <span class="kw">int</span> idx = probe(key, i);
+            <span class="kw">if</span> (table[idx] == EMPTY)  <span class="kw">return false</span>;
+            <span class="kw">if</span> (table[idx] == key) {
+                table[idx] = DELETED; size--;
+                <span class="kw">return true</span>;
+            }
+        }
+        <span class="kw">return false</span>;
+    }
+
+    <span class="kw">public double</span> <span class="hi">loadFactor</span>() { <span class="kw">return</span> (<span class="kw">double</span>) size / M; }
+}`;
+
+  document.getElementById('code-formula').innerHTML =
+`<span class="cm">// ══════════════════════════════════════════════════════════════════════════════</span>
+<span class="cm">// FÓRMULAS DE SONDAGEM  |  h(k) = k mod M  |  M primo, M = ${CAP}</span>
+<span class="cm">// ══════════════════════════════════════════════════════════════════════════════</span>
+
+<span class="hi">1. Linear Probing</span>
+   idx(i) = (h(k) + i) mod M,  i = 0, 1, 2, ...
+
+   Vantagem : simplicidade; boa localidade de cache (L1/L2)
+   Problema : clustering primário — blocos de células consecutivas ocupadas
+              crescem e se fundem, degradando O(1) → O(n)
+
+   Complexidade média (aproximação de Knuth):
+     Busca com sucesso    ≈ ½ · (1 + 1/(1 − λ))
+     Busca sem sucesso    ≈ ½ · (1 + 1/(1 − λ)²)
+
+<span class="hi">2. Quadratic Probing</span>
+   idx(i) = (h(k) + i²) mod M,  i = 0, 1, 2, ...
+
+   Vantagem : quebra clustering primário; espalhamento maior
+   Problema : clustering secundário — chaves com h(k) idêntico
+              seguem exatamente o mesmo caminho de sondagem
+
+   Garantia de cobertura completa: M primo ∧ λ ≤ 0.5
+
+<span class="hi">3. Double Hashing</span>
+   idx(i) = (h₁(k) + i · h₂(k)) mod M,  i = 0, 1, 2, ...
+
+   h₁(k) = k mod M
+   h₂(k) = p − (k mod p)   onde p = primo mais próximo &lt; M  [aqui p = ${p}]
+
+   Regra crítica: h₂(k) ≠ 0 para todo k — garantido pelo uso de p primo
+
+   Vantagem : sequências quase uniformemente distribuídas;
+              menor clustering de todos os métodos de end. aberto
+   Garantia de cobertura: se mdc(h₂(k), M) = 1, percorre todas M posições
+
+   Complexidade média (hashing uniforme independente):
+     Busca com sucesso    ≈ (1/λ) · ln(1/(1 − λ))
+     Busca sem sucesso    ≈ 1/(1 − λ)
+
+<span class="hi">Fator de carga  λ = n / M</span>   (n = entradas; M = capacidade)
+
+   λ &lt; 0.5  → desempenho excelente em todas as estratégias
+   λ ≥ 0.7  → degradação notável — considere rehashing
+   λ → 1.0  → colapso de desempenho; O(n) por operação
+
+<span class="hi">Rehashing</span>
+   1. Nova tabela: M' = menor primo ≥ 2M
+   2. Reinsira todos os elementos (tombstones são descartados)
+   3. Complexidade: Θ(n) — amortiza bem ao longo das inserções`;
+}
+
+/* Eventos */
+document.getElementById('capacity').addEventListener('change', function () {
+  initTable(parseInt(this.value));
+  updateCode();
+});
+document.getElementById('strategy').addEventListener('change', updateCode);
+
+/* Inicialização */
+initTable(11);
+updateCode();
+</script>
+</body>
+</html>
