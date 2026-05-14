@@ -27,7 +27,7 @@ public class Caixa<T> implements Armazenavel<T> {
     System.out.println(caixaDeDouble.recuperar());
 
     Integer numeroInteger = 100;
-    caixaDeString.guardar(numeroInteger);// Erro de compilação: incompatible types: Integer cannot be converted to String
+    // caixaDeString.guardar(numeroInteger);// Erro de compilação: incompatible types: Integer cannot be converted to String
     /*
      * Mensagem de erro do compilador:
      * error: method guardar in class Caixa<T> cannot be applied to given types;

@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explorador de Tabelas Hash — IFTM Estrutura de Dados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* paleta verde (extraída da imagem do usuário) */
+  --g50:  #f0faf4;
+  --g100: #c8e6d4;
+  --g200: #90c9a8;
+  --g400: #4a9e72;
+  --g600: #2d7a52;
+  --g800: #1a4f33;
+  --g900: #0e2e1e;
+
+  /* substituições das variáveis do claude.ai */
+  --color-background-primary:   #ffffff;
+  --color-background-secondary: #f5f5f0;
+  --color-background-tertiary:  #eeede8;
+  --color-text-primary:         #1a1a18;
+  --color-text-secondary:       #4a4a46;
+  --color-text-tertiary:        #888780;
+  --color-border-tertiary:      rgba(0,0,0,0.12);
+  --color-border-secondary:     rgba(0,0,0,0.22);
+  --color-border-primary:       rgba(0,0,0,0.32);
+  --font-sans:   'Nunito', 'Segoe UI', Arial, sans-serif;
+  --font-mono:   'JetBrains Mono', 'Fira Mono', 'Consolas', monospace;
+  --font-serif:  Georgia, 'Times New Roman', serif;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-background-secondary);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+  padding: 2rem 0;
+}
+
+.widget-shell {
+  max-width: 780px;
+  margin: 0 auto;
+  background: var(--color-background-primary);
+  border-radius: var(--border-radius-xl);
+  border: 1px solid var(--color-border-tertiary);
+  padding: 1.75rem 1.5rem 2rem;
+}
+
+.widget-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--g100);
+}
+.widget-header h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--g800);
+  margin-bottom: 3px;
+}
+.widget-header p {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.tab {
+  padding: 7px 15px;
+  border: 1.5px solid var(--g200);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--g600);
+  font-family: var(--font-sans);
+  transition: all .18s;
+}
+.tab:hover { background: var(--g50); border-color: var(--g400); }
+.tab.active { background: var(--g600); color: #fff; border-color: var(--g600); }
+
+.panel { display: none; }
+.panel.active { display: block; }
+
+.section-chip {
+  display: inline-block;
+  background: var(--g100);
+  color: var(--g800);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 20px;
+  margin-bottom: .6rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--g800);
+  margin-bottom: .6rem;
+}
+.muted {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.65;
+  margin-bottom: .9rem;
+}
+
+.formula-box {
+  background: var(--g50);
+  border: 1.5px solid var(--g200);
+  border-radius: var(--border-radius-md);
+  padding: .75rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--g800);
+  margin: .75rem 0;
+  line-height: 1.9;
+}
+
+.row { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; flex-wrap: wrap; }
+
+input[type=text], select {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 10px;
+  border: 1.5px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-md);
+  background: var(--color-background-primary);
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color .15s;
+}
+input[type=text]:focus, select:focus { border-color: var(--g400); }
+
+input[type=range] {
+  flex: 1;
+  accent-color: var(--g600);
+  cursor: pointer;
+}
+
+button {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 16px;
+  border: 1.5px solid var(--g200);
+  border-radius: var(--border-radius-md);
+  background: transparent;
+  color: var(--g800);
+  cursor: pointer;
+  transition: all .15s;
+}
+button:hover { background: var(--g50); border-color: var(--g400); }
+button:active { transform: scale(.98); }
+
+.bucket-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+  margin: .75rem 0;
+}
+.bucket {
+  min-height: 52px;
+  border: 1.5px solid var(--g100);
+  border-radius: 10px;
+  background: var(--g50);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 4px;
+  transition: background .2s, border-color .2s;
+}
+.bucket-idx { font-size: 10px; font-weight: 700; color: var(--g400); margin-bottom: 2px; }
+.bucket.highlight { background: var(--g100); border-color: var(--g400); }
+.bucket.collision { background: #fff3cd; border-color: #d4a017; }
+
+.entry {
+  background: var(--g200);
+  color: var(--g900);
+  border-radius: 5px;
+  padding: 2px 5px;
+  font-size: 10px;
+  font-weight: 600;
+  margin: 1px;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.entry.chain { background: var(--g100); color: var(--g800); }
+.entry.tree  { background: var(--g600); color: #fff; }
+
+.stat-row { display: flex; gap: 10px; margin: 1rem 0; flex-wrap: wrap; }
+.stat {
+  flex: 1;
+  min-width: 90px;
+  background: var(--g50);
+  border: 1.5px solid var(--g100);
+  border-radius: 10px;
+  padding: .75rem;
+  text-align: center;
+}
+.stat-val { font-size: 22px; font-weight: 700; color: var(--g600); }
+.stat-lbl { font-size: 11px; font-weight: 600; color: var(--g400); margin-top: 2px; text-transform: uppercase; letter-spacing: .04em; }
+
+.log {
+  background: var(--g50);
+  border: 1.5px solid var(--g100);
+  border-radius: 10px;
+  padding: .75rem;
+  font-size: 12px;
+  color: var(--g700, var(--g600));
+  font-family: var(--font-mono);
+  min-height: 40px;
+  margin-top: .5rem;
+  line-height: 1.7;
+  word-break: break-all;
+}
+
+.probe-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+  margin: 1rem 0;
+}
+.probe-cell {
+  height: 46px;
+  border: 1.5px solid var(--g100);
+  border-radius: 10px;
+  background: var(--g50);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  transition: all .2s;
+}
+.probe-cell .idx { font-size: 9px; font-weight: 700; color: var(--g400); }
+.probe-cell.occupied { background: var(--g200); border-color: var(--g400); color: var(--g900); }
+.probe-cell.target   { background: var(--g600); border-color: var(--g800); color: #fff; }
+.probe-cell.target .idx { color: var(--g100); }
+.probe-cell.probing  { background: #fff3cd; border-color: #d4a017; color: #7a4a00; }
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.badge-green  { background: var(--g100); color: var(--g800); }
+.badge-mid    { background: var(--g200); color: var(--g900); }
+.badge-dark   { background: var(--g600); color: #fff; }
+.badge-warn   { background: #fff3cd; color: #7a4a00; }
+.badge-coral  { background: #ffe0d6; color: #8b2500; }
+
+.treeify-hint { font-size: 12px; color: var(--g600); margin-top: .3rem; font-weight: 600; }
+
+.slider-row { display: flex; align-items: center; gap: 10px; margin: .5rem 0; }
+.slider-row label { font-size: 13px; font-weight: 600; color: var(--g600); min-width: 90px; }
+.slider-row span  { font-size: 13px; font-weight: 700; min-width: 36px; color: var(--g800); }
+
+.comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 1rem; }
+.card {
+  background: var(--color-background-primary);
+  border: 1.5px solid var(--g100);
+  border-radius: var(--border-radius-lg);
+  padding: 1rem 1.25rem;
+}
+.card-title { font-size: 14px; font-weight: 700; color: var(--g800); margin-bottom: .5rem; display: flex; align-items: center; gap: 8px; }
+.complexity-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--g50);
+}
+.complexity-row:last-child { border-bottom: none; }
+.op-name { color: var(--color-text-secondary); font-weight: 500; }
+.op-val  { font-family: var(--font-mono); font-size: 11px; font-weight: 700; }
+.ok  { color: var(--g600); }
+.warn{ color: #a06000; }
+.bad { color: #a32d2d; }
+
+.decision-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: .5rem; }
+.decision-card {
+  background: var(--g50);
+  border: 1.5px solid var(--g100);
+  border-radius: 10px;
+  padding: .75rem;
+  font-size: 12px;
+}
+.decision-card strong { font-weight: 700; color: var(--g800); display: block; margin-bottom: .3rem; }
+.decision-card p { color: var(--color-text-secondary); line-height: 1.8; }
+
+code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--g50);
+  border: 1px solid var(--g100);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--g700, var(--g600));
+}
+</style>
+</head>
+<body>
+
+<div class="widget-shell">
+
+  <div class="widget-header">
+    <h1>Explorador interativo de tabelas hash</h1>
+    <p>IFTM — Estrutura de Dados 2026/1 | Função hash · Colisões · Rehashing · HashMap vs TreeMap</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('hash',this)">Função hash</button>
+    <button class="tab" onclick="showTab('chaining',this)">Encadeamento separado</button>
+    <button class="tab" onclick="showTab('open',this)">Endereçamento aberto</button>
+    <button class="tab" onclick="showTab('rehash',this)">Rehashing</button>
+    <button class="tab" onclick="showTab('hashcode',this)">hashCode() em Java</button>
+    <button class="tab" onclick="showTab('compare',this)">HashMap vs TreeMap</button>
+  </div>
+
+  <!-- FUNÇÃO HASH -->
+  <div id="panel-hash" class="panel active">
+    <div class="section-chip">conceito</div>
+    <p class="section-title">Como a função hash mapeia chaves para índices</p>
+    <p class="muted">Digite qualquer chave para ver como ela é transformada em um índice da tabela. A fórmula usada é <code>índice = hashCode(chave) % capacidade</code>.</p>
+    <div class="formula-box">
+      índice = <span id="hf-hc" style="color:var(--g600);font-weight:700">hashCode(chave)</span>
+      % <span id="hf-cap" style="color:var(--g400)">capacidade</span>
+      = <span id="hf-result" style="color:var(--g800);font-weight:700">?</span>
+    </div>
+    <div class="row">
+      <input type="text" id="hf-key" placeholder='Digite uma chave (ex: "nome")' style="flex:1;min-width:180px" oninput="calcHash()" />
+      <select id="hf-capacity" onchange="calcHash()" style="width:155px">
+        <option value="8">Capacidade: 8</option>
+        <option value="16" selected>Capacidade: 16</option>
+        <option value="32">Capacidade: 32</option>
+      </select>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="stat-val" id="hf-s1">—</div><div class="stat-lbl">hashCode</div></div>
+      <div class="stat"><div class="stat-val" id="hf-s2">—</div><div class="stat-lbl">capacidade</div></div>
+      <div class="stat"><div class="stat-val" id="hf-s3">—</div><div class="stat-lbl">índice</div></div>
+    </div>
+    <div class="bucket-grid" id="hf-grid"></div>
+    <div class="log" id="hf-log">Aguardando entrada...</div>
+    <p class="muted" style="margin-top:.75rem">Uma boa função hash distribui chaves <strong>uniformemente</strong> pela tabela, minimizando colisões e mantendo o fator de carga baixo.</p>
+  </div>
+
+  <!-- ENCADEAMENTO SEPARADO -->
+  <div id="panel-chaining" class="panel">
+    <div class="section-chip">colisão</div>
+    <p class="section-title">Encadeamento separado (separate chaining)</p>
+    <p class="muted">Cada posição (bucket) contém uma lista ligada de entradas. Quando há colisão, o novo elemento é adicionado à lista do bucket correspondente. No Java 8+, buckets com ≥ 8 entradas são convertidos em árvores rubro-negras.</p>
+    <div class="row">
+      <input type="text" id="ch-key" placeholder="chave" style="width:130px" />
+      <input type="text" id="ch-val" placeholder="valor" style="width:130px" />
+      <button onclick="chainInsert()">Inserir</button>
+      <button onclick="chainClear()">Limpar</button>
+    </div>
+    <div class="bucket-grid" id="ch-grid"></div>
+    <div class="log" id="ch-log">Tabela vazia. Insira pares chave→valor.</div>
+    <p class="treeify-hint" id="ch-treeify"></p>
+    <div style="margin-top:1rem;display:flex;gap:10px;flex-wrap:wrap">
+      <span class="badge badge-green">■ entrada normal (lista)</span>
+      <span class="badge badge-dark">■ bucket treeificado (árvore)</span>
+      <span class="badge badge-warn">■ bucket com colisão</span>
+    </div>
+  </div>
+
+  <!-- ENDEREÇAMENTO ABERTO -->
+  <div id="panel-open" class="panel">
+    <div class="section-chip">colisão</div>
+    <p class="section-title">Endereçamento aberto (open addressing)</p>
+    <p class="muted">Quando há colisão, busca-se a próxima posição livre dentro da própria tabela. Nenhuma lista encadeada é usada — todos os elementos ficam no array.</p>
+    <div class="row">
+      <select id="probe-type" style="width:195px" onchange="updateProbeFormula()">
+        <option value="linear">Linear probing</option>
+        <option value="quadratic">Quadratic probing</option>
+        <option value="double">Double hashing</option>
+      </select>
+      <input type="text" id="probe-key" placeholder="chave" style="width:120px" />
+      <button onclick="probeInsert()">Inserir</button>
+      <button onclick="probeClear()">Limpar</button>
+    </div>
+    <div class="probe-grid" id="probe-grid"></div>
+    <div class="log" id="probe-log">Tabela vazia. Insira chaves para ver o probing.</div>
+    <div style="margin-top:.75rem;display:flex;gap:10px;flex-wrap:wrap">
+      <span class="badge badge-mid">■ ocupado</span>
+      <span class="badge badge-dark">■ recém-inserido</span>
+      <span class="badge badge-warn">■ posições sondadas</span>
+    </div>
+    <div class="formula-box" id="probe-formula" style="margin-top:1rem">
+      h(k,i) = (h(k) + i) % m <span style="color:var(--g400)">// linear probing</span>
+    </div>
+  </div>
+
+  <!-- REHASHING -->
+  <div id="panel-rehash" class="panel">
+    <div class="section-chip">performance</div>
+    <p class="section-title">Rehashing e fator de carga</p>
+    <p class="muted">O fator de carga λ = n/m (elementos / capacidade). Quando λ ultrapassa o limite (padrão 0,75 no HashMap), a tabela é redimensionada: nova capacidade = 2 × antiga, e todos os elementos são reinseridos.</p>
+    <div class="formula-box">
+      λ = n / m =
+      <span id="rh-n" style="color:var(--g600);font-weight:700">0</span> /
+      <span id="rh-m" style="color:var(--g400)">8</span> =
+      <span id="rh-lf" style="font-weight:700">0.00</span>
+      <span id="rh-status" style="color:var(--g600);font-weight:700">✓ dentro do limite</span>
+    </div>
+    <div class="slider-row">
+      <label>Limite λ:</label>
+      <input type="range" min="1" max="9" step="1" value="6" id="rh-threshold" oninput="rhUpdate()" />
+      <span id="rh-thresh-val">0.75</span>
+    </div>
+    <div class="row">
+      <button onclick="rhAdd()">Adicionar elemento</button>
+      <button onclick="rhClear()">Reiniciar</button>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="stat-val" id="rh-s1">0</div><div class="stat-lbl">elementos (n)</div></div>
+      <div class="stat"><div class="stat-val" id="rh-s2">8</div><div class="stat-lbl">capacidade (m)</div></div>
+      <div class="stat"><div class="stat-val" id="rh-s3">0</div><div class="stat-lbl">rehashes</div></div>
+      <div class="stat"><div class="stat-val">O(1)*</div><div class="stat-lbl">custo amortizado</div></div>
+    </div>
+    <div class="bucket-grid" id="rh-grid"></div>
+    <div class="log" id="rh-log">Clique em "Adicionar elemento" e observe o rehashing automático.</div>
+  </div>
+
+  <!-- HASHCODE -->
+  <div id="panel-hashcode" class="panel">
+    <div class="section-chip">Java</div>
+    <p class="section-title">hashCode() e equals() em Java</p>
+    <p class="muted">O contrato hashCode/equals é fundamental: objetos iguais (<code>equals</code> retorna <code>true</code>) devem ter o mesmo <code>hashCode</code>. Violar esse contrato quebra o comportamento do HashMap.</p>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title"><span class="badge badge-green">correto</span> Implementação válida</div>
+      <div class="formula-box" style="font-size:12px;line-height:1.95">
+        @Override<br>
+        public boolean equals(Object o) {<br>
+        &nbsp;&nbsp;if (this == o) return true;<br>
+        &nbsp;&nbsp;if (!(o instanceof Produto p)) return false;<br>
+        &nbsp;&nbsp;return id == p.id;<br>
+        }<br>
+        @Override<br>
+        public int hashCode() {<br>
+        &nbsp;&nbsp;return Objects.hash(id);<br>
+        }
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;border-color:#ffc8a0">
+      <div class="card-title"><span class="badge badge-coral">armadilha</span> Campo mutável como chave</div>
+      <div class="formula-box" style="font-size:12px;line-height:1.95;border-left:3px solid #d85a30;border-radius:0 10px 10px 0">
+        Produto p = new Produto(1, "Caneta");<br>
+        map.put(p, 99);<br>
+        p.setNome("Lápis"); <span style="color:#993c1d">// muda hashCode!</span><br>
+        map.get(p); <span style="color:#993c1d">// retorna null — chave perdida</span>
+      </div>
+      <p class="muted" style="margin:0;font-size:12px">Use apenas campos imutáveis no hashCode. Prefira <code>String</code>, <code>Integer</code>, <code>UUID</code> como chave.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Fórmula hashCode padrão (Java)</div>
+      <div class="formula-box" style="font-size:12px">
+        h = 31 * h + Objects.hashCode(campo1)<br>
+        h = 31 * h + Objects.hashCode(campo2)<br>
+        ...<br>
+        <span style="color:var(--g400)">// 31 é primo — minimiza colisões e permite shift otimizado pela JVM</span>
+      </div>
+      <div class="row" style="margin-top:.75rem">
+        <input type="text" id="hc-input" placeholder="texto qualquer" style="flex:1" oninput="calcJavaHash()" />
+      </div>
+      <div class="stat-row">
+        <div class="stat"><div class="stat-val" id="hc-v1" style="font-size:16px">—</div><div class="stat-lbl">hashCode (Java-like)</div></div>
+        <div class="stat"><div class="stat-val" id="hc-v2" style="font-size:16px">—</div><div class="stat-lbl">% 16 (índice)</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPARAÇÃO -->
+  <div id="panel-compare" class="panel">
+    <div class="section-chip">JCF</div>
+    <p class="section-title">HashMap vs TreeMap: quando usar cada um</p>
+    <p class="muted">Ambas implementam <code>Map&lt;K,V&gt;</code>, mas com trade-offs distintos de complexidade, ordem e requisitos sobre as chaves.</p>
+    <div class="comparison-grid">
+      <div class="card" style="border-top:4px solid var(--g400)">
+        <div class="card-title">HashMap&lt;K,V&gt;</div>
+        <p class="muted" style="font-size:12px;margin-bottom:.75rem">Tabela hash com encadeamento separado e treeification (Java 8+).</p>
+        <div class="complexity-row"><span class="op-name">get / put</span><span class="op-val ok">O(1) amortizado</span></div>
+        <div class="complexity-row"><span class="op-name">pior caso (colisões)</span><span class="op-val warn">O(n) → O(log n)*</span></div>
+        <div class="complexity-row"><span class="op-name">iteração</span><span class="op-val warn">O(n) — sem ordem</span></div>
+        <div class="complexity-row"><span class="op-name">memória</span><span class="op-val ok">menor</span></div>
+        <div class="complexity-row"><span class="op-name">chave requer</span><span class="op-val">hashCode + equals</span></div>
+        <div class="complexity-row"><span class="op-name">null key</span><span class="op-val ok">permitido (1)</span></div>
+        <p style="font-size:11px;color:var(--g400);margin-top:.5rem;font-weight:600">* após treeification no bucket</p>
+      </div>
+      <div class="card" style="border-top:4px solid var(--g200)">
+        <div class="card-title">TreeMap&lt;K,V&gt;</div>
+        <p class="muted" style="font-size:12px;margin-bottom:.75rem">Árvore rubro-negra balanceada. Mantém chaves em ordem natural ou por Comparator.</p>
+        <div class="complexity-row"><span class="op-name">get / put</span><span class="op-val warn">O(log n)</span></div>
+        <div class="complexity-row"><span class="op-name">pior caso</span><span class="op-val ok">O(log n) garantido</span></div>
+        <div class="complexity-row"><span class="op-name">iteração</span><span class="op-val ok">O(n) — ordenada</span></div>
+        <div class="complexity-row"><span class="op-name">memória</span><span class="op-val warn">maior (ponteiros)</span></div>
+        <div class="complexity-row"><span class="op-name">chave requer</span><span class="op-val">Comparable ou Comparator</span></div>
+        <div class="complexity-row"><span class="op-name">null key</span><span class="op-val bad">não permitido</span></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="card-title">Guia de decisão rápida</div>
+      <div class="decision-grid">
+        <div class="decision-card">
+          <strong>Use HashMap quando:</strong>
+          <p>✓ Velocidade é prioridade<br>✓ Ordem não importa<br>✓ Cache, sessões, índices<br>✓ Chaves são String/Integer</p>
+        </div>
+        <div class="decision-card">
+          <strong>Use TreeMap quando:</strong>
+          <p>✓ Precisa de ordem<br>✓ firstKey / lastKey / subMap<br>✓ Range queries<br>✓ Autocompletar / ranking</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /widget-shell -->
+
+<script>
+const CAP = 8;
+
+function showTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-' + id).classList.add('active');
+}
+
+function simpleHash(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (31 * h + s.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+function makeHFGrid(cap, highlight = -1) {
+  const g = document.getElementById('hf-grid');
+  g.style.gridTemplateColumns = 'repeat(' + cap + ',1fr)';
+  g.innerHTML = '';
+  for (let i = 0; i < cap; i++) {
+    const d = document.createElement('div');
+    d.className = 'bucket' + (i === highlight ? ' highlight' : '');
+    d.innerHTML = '<span class="bucket-idx">' + i + '</span>';
+    g.appendChild(d);
+  }
+}
+
+function calcHash() {
+  const k = document.getElementById('hf-key').value;
+  const cap = parseInt(document.getElementById('hf-capacity').value);
+  makeHFGrid(cap);
+  if (!k) {
+    document.getElementById('hf-log').textContent = 'Aguardando entrada...';
+    ['hf-s1','hf-s2','hf-s3'].forEach(id => document.getElementById(id).textContent = '—');
+    document.getElementById('hf-hc').textContent = 'hashCode(chave)';
+    document.getElementById('hf-cap').textContent = 'capacidade';
+    document.getElementById('hf-result').textContent = '?';
+    return;
+  }
+  const h = simpleHash(k);
+  const idx = h % cap;
+  document.getElementById('hf-s1').textContent = h;
+  document.getElementById('hf-s2').textContent = cap;
+  document.getElementById('hf-s3').textContent = idx;
+  document.getElementById('hf-hc').textContent = h;
+  document.getElementById('hf-cap').textContent = cap;
+  document.getElementById('hf-result').textContent = idx;
+  document.getElementById('hf-log').textContent = 'hashCode("' + k + '") = ' + h + ' → ' + h + ' % ' + cap + ' = ' + idx;
+  makeHFGrid(cap, idx);
+  const cell = document.getElementById('hf-grid').children[idx];
+  const e = document.createElement('div');
+  e.className = 'entry';
+  e.textContent = k;
+  cell.appendChild(e);
+}
+makeHFGrid(16);
+
+const chainData = Array.from({ length: CAP }, () => []);
+function renderChain() {
+  const g = document.getElementById('ch-grid');
+  g.style.gridTemplateColumns = 'repeat(' + CAP + ',1fr)';
+  g.innerHTML = '';
+  let treeified = [];
+  for (let i = 0; i < CAP; i++) {
+    const d = document.createElement('div');
+    const isC = chainData[i].length > 1;
+    const isT = chainData[i].length >= 8;
+    d.className = 'bucket' + (isC ? ' collision' : '');
+    d.innerHTML = '<span class="bucket-idx">' + i + '</span>';
+    chainData[i].forEach(entry => {
+      const el = document.createElement('div');
+      el.className = 'entry' + (isT ? ' tree' : isC ? ' chain' : '');
+      el.textContent = entry.k;
+      el.title = entry.k + '→' + entry.v;
+      d.appendChild(el);
+    });
+    g.appendChild(d);
+    if (isT) treeified.push(i);
+  }
+  document.getElementById('ch-treeify').textContent = treeified.length
+    ? '⚡ Bucket(s) ' + treeified.join(', ') + ' convertido(s) em árvore rubro-negra (≥ 8 entradas).'
+    : '';
+}
+function chainInsert() {
+  const k = document.getElementById('ch-key').value.trim();
+  const v = document.getElementById('ch-val').value.trim() || 'val';
+  if (!k) return;
+  const idx = simpleHash(k) % CAP;
+  const ex = chainData[idx].findIndex(e => e.k === k);
+  if (ex >= 0) {
+    chainData[idx][ex].v = v;
+    document.getElementById('ch-log').textContent = 'Chave "' + k + '" já existe no bucket ' + idx + '. Valor atualizado.';
+  } else {
+    chainData[idx].push({ k, v });
+    const col = chainData[idx].length > 1;
+    document.getElementById('ch-log').textContent =
+      (col ? '⚠ Colisão no bucket ' + idx + '! ' : '') +
+      'Inserido "' + k + '" no bucket ' + idx +
+      (chainData[idx].length >= 8 ? ' → treeificando!' : '') + '.';
+  }
+  renderChain();
+  document.getElementById('ch-key').value = '';
+  document.getElementById('ch-val').value = '';
+}
+function chainClear() {
+  for (let i = 0; i < CAP; i++) chainData[i] = [];
+  renderChain();
+  document.getElementById('ch-log').textContent = 'Tabela limpa.';
+}
+renderChain();
+
+const probeData = Array(CAP).fill(null);
+const probeFormulas = {
+  linear:    'h(k,i) = (h(k) + i) % m',
+  quadratic: 'h(k,i) = (h(k) + i²) % m',
+  double:    'h(k,i) = (h(k) + i·h₂(k)) % m'
+};
+function updateProbeFormula() {
+  const type = document.getElementById('probe-type').value;
+  document.getElementById('probe-formula').innerHTML =
+    probeFormulas[type] + ' <span style="color:var(--g400)">// ' + type + ' probing</span>';
+}
+function renderProbe(target = -1, probed = []) {
+  const g = document.getElementById('probe-grid');
+  g.style.gridTemplateColumns = 'repeat(' + CAP + ',1fr)';
+  g.innerHTML = '';
+  for (let i = 0; i < CAP; i++) {
+    const d = document.createElement('div');
+    const isTgt = i === target;
+    const isPrb = probed.includes(i) && !isTgt;
+    d.className = 'probe-cell' + (isTgt ? ' target' : isPrb ? ' probing' : probeData[i] ? ' occupied' : '');
+    d.innerHTML = '<span class="idx">' + i + '</span><span style="font-size:10px;font-weight:700">' + (probeData[i] || '') + '</span>';
+    g.appendChild(d);
+  }
+}
+function probeInsert() {
+  const k = document.getElementById('probe-key').value.trim();
+  if (!k) return;
+  const type = document.getElementById('probe-type').value;
+  const h = simpleHash(k) % CAP;
+  let idx = h, probed = [], steps = 0;
+  while (probeData[idx] !== null && probeData[idx] !== k && steps < CAP) {
+    probed.push(idx); steps++;
+    if (type === 'linear') idx = (h + steps) % CAP;
+    else if (type === 'quadratic') idx = (h + steps * steps) % CAP;
+    else { const h2 = 1 + (simpleHash(k) % (CAP - 1)); idx = (h + steps * h2) % CAP; }
+  }
+  if (steps >= CAP) { document.getElementById('probe-log').textContent = '⚠ Tabela cheia! Não foi possível inserir "' + k + '".'; return; }
+  probeData[idx] = k;
+  renderProbe(idx, probed);
+  document.getElementById('probe-log').textContent =
+    'Inserido "' + k + '" no índice ' + idx + '. Posições sondadas: ' +
+    (probed.length ? probed.join(' → ') : 'nenhuma (sem colisão)') + '.';
+  document.getElementById('probe-key').value = '';
+}
+function probeClear() {
+  for (let i = 0; i < CAP; i++) probeData[i] = null;
+  renderProbe();
+  document.getElementById('probe-log').textContent = 'Tabela limpa.';
+}
+renderProbe();
+
+let rhData = [], rhCap = 8, rhRehashes = 0;
+const rhThresholds = [0.25, 0.4, 0.5, 0.6, 0.65, 0.75, 0.9];
+function rhUpdate() {
+  const v = parseInt(document.getElementById('rh-threshold').value);
+  document.getElementById('rh-thresh-val').textContent = rhThresholds[v - 1].toFixed(2);
+  renderRH();
+}
+function renderRH() {
+  const g = document.getElementById('rh-grid');
+  g.style.gridTemplateColumns = 'repeat(' + rhCap + ',1fr)';
+  g.innerHTML = '';
+  const buckets = Array.from({ length: rhCap }, () => []);
+  rhData.forEach(k => buckets[simpleHash(k) % rhCap].push(k));
+  for (let i = 0; i < rhCap; i++) {
+    const d = document.createElement('div');
+    d.className = 'bucket' + (buckets[i].length > 1 ? ' collision' : '');
+    d.innerHTML = '<span class="bucket-idx">' + i + '</span>';
+    buckets[i].forEach(k => {
+      const e = document.createElement('div');
+      e.className = 'entry';
+      e.textContent = k.slice(0, 6);
+      d.appendChild(e);
+    });
+    g.appendChild(d);
+  }
+  const lf = rhData.length / rhCap;
+  const thresh = rhThresholds[parseInt(document.getElementById('rh-threshold').value) - 1];
+  document.getElementById('rh-n').textContent = rhData.length;
+  document.getElementById('rh-m').textContent = rhCap;
+  document.getElementById('rh-lf').textContent = lf.toFixed(2);
+  document.getElementById('rh-s1').textContent = rhData.length;
+  document.getElementById('rh-s2').textContent = rhCap;
+  document.getElementById('rh-s3').textContent = rhRehashes;
+  const st = document.getElementById('rh-status');
+  if (lf > thresh) { st.textContent = '⚠ limite ultrapassado!'; st.style.color = '#a32d2d'; }
+  else { st.textContent = '✓ dentro do limite'; st.style.color = 'var(--g600)'; }
+}
+const rhWords = ['alice','bob','cache','dados','enum','fila','grafo','heap','index','java','key','lista','map','node','objeto','pilha','queue','rede','set','tree'];
+function rhAdd() {
+  const key = rhWords[rhData.length % rhWords.length] + rhData.length;
+  rhData.push(key);
+  const thresh = rhThresholds[parseInt(document.getElementById('rh-threshold').value) - 1];
+  const lf = rhData.length / rhCap;
+  if (lf > thresh) {
+    const old = rhCap; rhCap *= 2; rhRehashes++;
+    document.getElementById('rh-log').textContent =
+      '🔄 Rehash! λ=' + lf.toFixed(2) + ' > ' + thresh.toFixed(2) +
+      '. Capacidade: ' + old + ' → ' + rhCap +
+      '. Todos os ' + rhData.length + ' elementos reinseridos.';
+  } else {
+    document.getElementById('rh-log').textContent =
+      'Inserido "' + key + '". λ = ' + rhData.length + ' / ' + rhCap + ' = ' + lf.toFixed(2) + '.';
+  }
+  renderRH();
+}
+function rhClear() {
+  rhData = []; rhCap = 8; rhRehashes = 0;
+  renderRH();
+  document.getElementById('rh-log').textContent = 'Reiniciado.';
+}
+renderRH();
+
+function calcJavaHash() {
+  const s = document.getElementById('hc-input').value;
+  if (!s) { document.getElementById('hc-v1').textContent = '—'; document.getElementById('hc-v2').textContent = '—'; return; }
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+  document.getElementById('hc-v1').textContent = h;
+  document.getElementById('hc-v2').textContent = ((h % 16) + 16) % 16;
+}
+</script>
+</body>
+</html>

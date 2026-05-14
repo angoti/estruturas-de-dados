@@ -1,3 +1,5 @@
+package recursao;
+
 public class Recorrencia {
 
   public static void main(String[] args) {
